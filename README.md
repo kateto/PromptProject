@@ -2,7 +2,7 @@
 
 *A year of everyday exchanges with AI*
 
-State of the Prompt is a Rutgers University research project on how Americans use conversational AI for information and advice, from following the news to navigating health, work, and family life. This repository holds the project's public website.
+State of the Prompt is a Rutgers University research project on how Americans use conversational AI for information and advice, from following the news to navigating health, work, and family life. This repository holds the project's public website, at **https://kateto.github.io/PromptProject/**.
 
 ## Why it matters
 
