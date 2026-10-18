@@ -242,9 +242,10 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
   'use strict';
   drawRing(document.getElementById('ring'), '../data/');
   /* ---- the contact form ----
-     Paste the Formspree endpoint (https://formspree.io/f/...) between the quotes.
-     Until then the form says plainly that it is not connected. */
-  const FORM_ENDPOINT = '';
+     Submissions go to Formspree, which emails the project leads; the
+     recipients are set in the Formspree account, not here. With the
+     endpoint empty, the form says plainly that it is not connected. */
+  const FORM_ENDPOINT = 'https://formspree.io/f/mnpjrbrl';
 
   /* the population figures in the text come from the site's data, so they cannot drift */
   fetch('../data/site.json').then(r => r.json()).then(site => {
