@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · State of the Prompt</title>
+<meta name="description" content="About State of the Prompt: a Rutgers University study of a year of ChatGPT conversations shared by a US research panel. The data, what stays private, and the team.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: navy header and title band with the dial motif, then a reading column beside an "at a glance" panel, then the team as cards and the contact form. */
+:root {
+  --night: #0f1724;
+  --night-2: #16223a;
+  --night-line: rgba(255, 255, 255, 0.12);
+  --on-night: #e8ecf2;
+  --on-night-2: #aab4c4;
+  --glow: #ffcf86;
+  --ink: #13233a;
+  --ink-2: #595959;
+  --ink-3: #7d7d7d;
+  --rule: #e1e1e1;
+  --paper: #ffffff;
+  --mist: #f3f3f3;
+  --scarlet: #cc0033;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--serif); font-weight: 500; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--scarlet); outline-offset: 2px; }
+.skip { position: absolute; left: -9999px; top: 8px; background: #fff; color: var(--ink); padding: 8px 12px; z-index: 10; }
+.skip:focus { left: 8px; }
+
+.top { background: var(--night); color: var(--on-night); border-bottom: 1px solid var(--night-line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 21px; font-weight: 500; text-decoration: none; }
+.brand img { display: block; }
+.nav { display: flex; gap: 6px 22px; font-size: 14px; color: var(--on-night-2); flex-wrap: wrap; }
+@media (max-width: 480px) { .nav { column-gap: 16px; } }
+.nav a { text-decoration: none; }
+.nav a:hover { color: #fff; }
+.nav a[aria-current] { color: #fff; border-bottom: 2px solid var(--scarlet); padding-bottom: 2px; }
+
+.title { background: var(--night); color: var(--on-night); padding-block: 42px 46px; position: relative; overflow: hidden; }
+.title .inner { position: relative; z-index: 1; max-width: 760px; }
+.title h1 { font-size: clamp(34px, 5vw, 54px); line-height: 1.06; color: #fff; }
+.title .h1-sub { display: block; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.3; color: #d6dce6; font-weight: 400; margin-top: 10px; }
+.ring { position: absolute; right: -60px; top: 50%; transform: translateY(-50%); width: 420px; height: 420px; opacity: 0.5; z-index: 0; }
+
+.body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 56px; padding-block: 48px 24px; align-items: start; }
+.prose { max-width: 40em; min-width: 0; }
+.prose h2 { font-size: 28px; margin: 34px 0 10px; }
+.prose h2:first-child { margin-top: 0; }
+.prose p { margin-bottom: 14px; font-size: 17px; line-height: 1.7; color: var(--ink); }
+
+.glance { background: var(--mist); border-radius: 8px; padding: 22px 22px 18px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+.glance h2 { font-family: var(--sans); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); margin-bottom: 12px; }
+.glance dl { margin: 0; display: grid; gap: 14px; }
+.glance dt { font-family: var(--serif); font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.glance dd { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+.glance .src { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+
+.team { background: var(--mist); padding-block: 48px; margin-top: 24px; scroll-margin-top: 12px; }
+.team h2 { font-size: 34px; }
+.people { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; }
+.person { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: flex; gap: 16px; align-items: center; min-width: 0; text-decoration: none; color: inherit; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.person:hover { border-color: var(--ink-3); box-shadow: 0 6px 18px rgba(19, 35, 58, 0.08); }
+.person:hover h3 { color: var(--scarlet); }
+.avatar { flex: none; display: block; width: 88px; height: 88px; border-radius: 50%; overflow: hidden; background: var(--night); }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Three photos are framed wider than the rest; zoom them so faces fill the circle
+   about as much as the others do. translate = zoom x (50% - face center), so the
+   face lands in the middle without showing an edge of the photo. */
+.avatar img[src$="jhaver.jpg"] { transform: translate(8.3%, 22.5%) scale(1.45); }
+.avatar img[src$="lee.jpg"] { transform: translate(-7.7%, 5.7%) scale(1.45); }
+.avatar img[src$="li.jpg"] { transform: translate(7.9%, 11.5%) scale(1.55); }
+.person h3 { font-size: 22px; line-height: 1.2; transition: color 0.2s ease; }
+/* every row under the name in one size and weight; only "Project lead" keeps the red */
+.role, .title-line, .aff { font-size: 14px; line-height: 1.45; font-weight: 400; color: var(--ink-2); }
+.role { color: var(--scarlet); margin-top: 2px; }
+.title-line { margin-top: 4px; font-weight: 600; }
+
+.contact { padding-block: 40px 48px; display: grid; grid-template-columns: minmax(0, 40em); gap: 40px; scroll-margin-top: 12px; }
+.contact h2 { font-size: 26px; margin-bottom: 8px; }
+.contact p { color: var(--ink-2); }
+.msg { margin-top: 18px; display: grid; gap: 8px; }
+.msg-label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.msg textarea, .msg input { width: 100%; font: 400 16px/1.5 var(--sans); color: var(--ink); background: var(--paper); border: 1px solid var(--ink-3); border-radius: 6px; padding: 10px 14px; }
+.msg textarea { resize: vertical; min-height: 140px; padding: 12px 14px; }
+.msg textarea:focus, .msg input:focus { outline: 2px solid var(--scarlet); outline-offset: 1px; border-color: var(--scarlet); }
+.msg-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 6px; }
+.msg-field { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.msg-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.send { font: 500 15px var(--sans); background: var(--scarlet); color: #fff; border: 0; border-radius: 4px; padding: 10px 20px; cursor: pointer; }
+.send:hover { background: #a3002a; }
+.send[disabled] { opacity: 0.6; cursor: default; }
+.msg-note { font-size: 14px; color: var(--ink-2); }
+.msg-error { font-size: 13px; color: var(--scarlet); }
+.hp { position: absolute; left: -9999px; }
+
+.partners { padding-block: 0 48px; }
+.partner-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.partner { background: var(--mist); padding: 22px 18px; text-align: center; font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--scarlet); }
+a.partner { display: flex; flex-direction: column; justify-content: center; gap: 4px; text-decoration: none; transition: background 0.2s ease; }
+a.partner:hover { background: #eaeaea; }
+
+footer { background: var(--night); color: var(--on-night-2); padding-block: 22px; font-size: 13px; }
+.foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.foot a { text-decoration: none; }
+.foot a:hover { color: #fff; }
+
+@media (max-width: 860px) {
+  .body, .contact { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .glance { position: static; }
+  .partner-grid { grid-template-columns: minmax(0, 1fr); }
+  .ring { opacity: 0.25; right: -160px; }
+}
+@media (max-width: 600px) { .people, .msg-pair { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="../" aria-label="State of the Prompt, home">
+      <img src="../assets/logo.svg" width="30" height="30" alt="">
+      State of the Prompt
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="../#insights">Insights</a><a href="../reports/">Reports</a><a href="../explore/">Explore</a><a href="../ask/">Ask</a><a href="../trends/">Trends</a><a href="./" aria-current="page">About</a><a href="#team">Team</a><a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="title">
+  <svg class="ring" viewBox="0 0 400 400" aria-hidden="true" id="ring"></svg>
+  <div class="wrap">
+    <div class="inner">
+      <h1>State of the Prompt<span class="h1-sub">A year of everyday exchanges with AI</span></h1>
+    </div>
+  </div>
+</section>
+
+<div class="wrap body">
+  <article class="prose">
+    <h2>Why it matters</h2>
+    <p>While Americans increasingly get information from conversational AI, these exchanges tend to remain private. Unlike news broadcasts or social media feeds, the content of AI chats is largely unavailable to journalists, regulators, and researchers. This project will examine how Americans use conversational AI for information and advice, from following the news to navigating health, work, and family life.</p>
+    <p>We look at who uses AI for what and how that differs by age, education, income, and region. We also trace how these patterns shifted over a year in which conversational AI became part of daily routines for many Americans.</p>
+
+    <h2>A year of conversations</h2>
+    <p>Through a collaboration with MFour Data Research, the project draws on ChatGPT conversations from 73,852 members of a US consumer research panel. Panelists agreed to share their conversations through the panel’s app. Between July 2025 and June 2026, they had 3.9 million conversations with ChatGPT, made up of 39.8 million messages. For most panelists, the conversations are linked to a self-reported profile that includes age, gender, education, income, race and ethnicity, and state of residence.</p>
+    <p>The panel is not a random sample of the country. It includes more women and more people with lower incomes than the US population as a whole. For that reason, our analyses focus on comparisons between groups rather than on national estimates.</p>
+
+    <h2>Who is in the figures</h2>
+    <p>Everything on this site describes adults. The figures cover <span id="p-people">65,689</span> panelists with a demographic profile, and count only the conversations they had at 18 or older: <span id="p-conv">3.4 million</span> conversations in all. Conversations by teenagers, and by panelists whose age was not recorded, are left out. Age groups use each panelist’s age in July 2026, when the demographic profile was taken, so a conversation from earlier in the year can count in the next age group up. Times of day are the panelist’s local time, based on the state they live in.</p>
+
+    <h2>Reading at scale</h2>
+    <p>No team could read millions of conversations, so we rely on language models to sort them. The models classify each conversation by subject, purpose, and political content, and a topic model adds a finer map of about 100 recurring themes. Where possible, we check the models’ judgments against conversations coded by members of the team.</p>
+
+    <h2>What stays private</h2>
+    <p>These exchanges are often deeply personal. They include health questions, family conflicts, and money worries, and some contain names or other identifying details. The full conversations are stored on secure university systems and are available only to the research team, under a license that permits research use at Rutgers.</p>
+    <p>Everything published on this site is an aggregate. Every figure describes a group of people, never an individual, and no conversation is ever shown or quoted. Figures that rest on too few conversations, or on a handful of people, are withheld.</p>
+  </article>
+
+  <aside class="glance" aria-labelledby="glance-h">
+    <h2 id="glance-h">At a glance</h2>
+    <dl>
+      <div><dt>73,852</dt><dd>people on a US research panel</dd></div>
+      <div><dt>3.9 million</dt><dd>conversations with ChatGPT</dd></div>
+      <div><dt>39.8 million</dt><dd>messages between people and ChatGPT</dd></div>
+      <div><dt>12 months</dt><dd>July 2025 to June 2026</dd></div>
+      <div><dt id="g-people">65,689</dt><dd>adults in this site’s figures</dd></div>
+      <div><dt>28 subjects</dt><dd>and about 100 finer topics</dd></div>
+    </dl>
+    <p class="src">Only aggregates are published.</p>
+  </aside>
+</div>
+
+<section class="team" id="team" aria-labelledby="team-h">
+  <div class="wrap">
+    <h2 id="team-h">Project team</h2>
+    <div class="people">
+      <a class="person" href="https://sci.rutgers.edu/ognyanova-katherine-katya"><span class="avatar"><img src="../assets/team/ognyanova.jpg" alt="" width="88" height="88"></span><div><h3>Katherine Ognyanova</h3><p class="role">Project lead</p><p class="title-line">Professor, Communication</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/garimella-kiran"><span class="avatar"><img src="../assets/team/garimella.jpg" alt="" width="88" height="88"></span><div><h3>Kiran Garimella</h3><p class="role">Project lead</p><p class="title-line">Assistant Professor, Library and Information Science</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/aakhus-mark"><span class="avatar"><img src="../assets/team/aakhus.jpg" alt="" width="88" height="88"></span><div><h3>Mark Aakhus</h3><p class="title-line">Professor, Communication</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/jhaver-shagun"><span class="avatar"><img src="../assets/team/jhaver.jpg" alt="" width="88" height="88"></span><div><h3>Shagun Jhaver</h3><p class="title-line">Assistant Professor, Library and Information Science</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/lee-eu-gene"><span class="avatar"><img src="../assets/team/lee.jpg" alt="" width="88" height="88"></span><div><h3>Eu Gene Lee</h3><p class="title-line">Assistant Professor, Communication</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/li-jianing"><span class="avatar"><img src="../assets/team/li.jpg" alt="" width="88" height="88"></span><div><h3>Jianing Li</h3><p class="title-line">Assistant Professor, Communication</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+      <a class="person" href="https://sci.rutgers.edu/shugars-sarah"><span class="avatar"><img src="../assets/team/shugars.jpg" alt="" width="88" height="88"></span><div><h3>Sarah Shugars</h3><p class="title-line">Assistant Professor, Communication</p><p class="aff">School of Communication and Information</p><p class="aff">Rutgers University</p></div></a>
+    </div>
+  </div>
+</section>
+
+<section class="wrap contact" id="contact" aria-labelledby="contact-h">
+  <div>
+    <h2 id="contact-h">Get in touch</h2>
+    <p>For questions about the project, press inquiries, or collaboration, send a message to the project leads.</p>
+    <form class="msg" id="msgform" novalidate>
+      <div class="msg-pair">
+        <div class="msg-field"><label for="msgname" class="msg-label">Your name</label><input id="msgname" name="name" type="text" autocomplete="name"><p class="msg-error" id="nameerr" hidden>Enter your name.</p></div>
+        <div class="msg-field"><label for="msgemail" class="msg-label">Your email</label><input id="msgemail" name="email" type="email" autocomplete="email"><p class="msg-error" id="emailerr" hidden>Enter an email address we can reply to.</p></div>
+      </div>
+      <label for="msg" class="msg-label">Your message</label>
+      <textarea id="msg" name="message" rows="6"></textarea>
+      <p class="msg-error" id="msgerr" hidden>Write a message first.</p>
+      <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="msg-row"><button type="submit" class="send" id="send">Send message</button><span class="msg-note" id="msgnote" aria-live="polite"></span></div>
+    </form>
+  </div>
+</section>
+
+<section class="partners" aria-label="Partners">
+  <div class="wrap partner-grid">
+    <a class="partner" href="https://csslab.rutgers.edu/">Rutgers Computational Social Science Lab</a>
+    <a class="partner" href="https://naiom.net/">National AI Opinion Monitor</a>
+    <a class="partner" href="https://comminfo.rutgers.edu/">Rutgers School of<br>Communication &amp; Information</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>State of the Prompt · Rutgers University, School of Communication and Information</span>
+    <span><a href="../reports/">Reports</a> · <a href="../explore/">Dashboard</a> · <a href="../ask/">Ask the data</a></span>
+  </div>
+</footer>
+
+<script src="../assets/ring.js"></script>
+<script>
+(function () {
+  'use strict';
+  drawRing(document.getElementById('ring'), '../data/');
+  /* ---- the contact form ----
+     Paste the Formspree endpoint (https://formspree.io/f/...) between the quotes.
+     Until then the form says plainly that it is not connected. */
+  const FORM_ENDPOINT = '';
+
+  /* the population figures in the text come from the site's data, so they cannot drift */
+  fetch('../data/site.json').then(r => r.json()).then(site => {
+    document.getElementById('p-people').textContent = site.population.people.toLocaleString('en-US');
+    document.getElementById('g-people').textContent = site.population.people.toLocaleString('en-US');
+    document.getElementById('p-conv').textContent = (site.population.conversations / 1e6).toFixed(1) + ' million';
+  }).catch(() => {});
+
+  const f = document.getElementById('msgform'), note = document.getElementById('msgnote'), send = document.getElementById('send');
+  const fields = [['msgname', 'nameerr', v => v.trim().length > 0], ['msgemail', 'emailerr', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())], ['msg', 'msgerr', v => v.trim().length > 0]]
+    .map(([id, eid, ok]) => ({ el: document.getElementById(id), err: document.getElementById(eid), ok }));
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    let first = null;
+    fields.forEach(x => { const good = x.ok(x.el.value); x.err.hidden = good; if (!good && !first) first = x.el; });
+    if (first) { note.textContent = ''; first.focus(); return; }
+    if (!FORM_ENDPOINT) { note.textContent = 'The contact form is not connected yet. Please try again later.'; return; }
+    send.disabled = true; note.textContent = 'Sending…';
+    fetch(FORM_ENDPOINT, { method: 'POST', body: new FormData(f), headers: { Accept: 'application/json' } })
+      .then(r => { if (!r.ok) throw new Error(r.status); f.reset(); note.textContent = 'Thank you. Your message was sent to the project leads.'; })
+      .catch(() => { note.textContent = 'The message could not be sent. Please try again in a few minutes.'; })
+      .finally(() => { send.disabled = false; });
+  });
+  fields.forEach(x => x.el.addEventListener('input', () => { x.err.hidden = true; }));
+})();
+</script>
+</body>
+</html>

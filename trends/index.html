@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trends · State of the Prompt</title>
+<meta name="description" content="Compare how often people mention people, places, products and other terms in their ChatGPT conversations, month by month and across groups.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/report.css">
+<style>
+/* Layout: navy title band with a term picker, a measure switch, then the month chart, a table, a by-group comparison and the term list. */
+.thead { background: var(--night); color: var(--on-night); padding-block: 34px 28px; }
+.thead .kicker { color: var(--glow); }
+.thead h1 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.08; color: #fff; margin-top: 8px; }
+.thead .sub { color: #c9d1dd; margin-top: 10px; max-width: 46em; }
+.pick { display: flex; gap: 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 4px; overflow: hidden; background: #fff; margin-top: 20px; max-width: 620px; }
+.pick input { flex: 1; min-width: 0; border: 0; padding: 13px 16px; font: 400 17px var(--sans); color: var(--ink); background: transparent; }
+.pick input:focus { outline: none; }
+.pick:focus-within { outline: 2px solid var(--glow); outline-offset: 2px; }
+.pick button { border: 0; font: 500 15px var(--sans); padding: 0 20px; background: var(--scarlet); color: #fff; cursor: pointer; }
+.pick button:hover { background: var(--scarlet-dark); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; min-height: 34px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 14px; color: #fff; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.chip button { border: 0; background: transparent; color: #c9d1dd; font-size: 17px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.chip button:hover { color: #fff; }
+.hint { font-size: 13px; color: #aab4c4; margin-top: 8px; }
+.hint a { color: #fff; }
+.msg { font-size: 14px; color: var(--glow); margin-top: 8px; min-height: 20px; }
+/* the prominent notice for a term that is not on the list, or too rare to chart */
+.notice { max-width: 620px; margin-top: 14px; background: #fff; color: var(--ink); border-left: 4px solid var(--scarlet); border-radius: 4px; padding: 14px 16px; font-size: 15px; line-height: 1.55; }
+.notice b { font-weight: 600; }
+.notice p + p { margin-top: 6px; }
+.notice a { color: var(--scarlet); font-weight: 600; }
+
+.tbody { padding-block: 26px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+.measure { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.measure .lbl { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; padding: 3px; background: var(--paper); }
+.seg button { font: 500 14px var(--sans); border: 0; background: transparent; border-radius: 4px; padding: 6px 14px; cursor: pointer; color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.panel { background: var(--mist); border-radius: 8px; padding: 18px 20px 16px; min-width: 0; }
+.panel h2 { font-family: var(--sans); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.panel .note { font-size: 13px; color: var(--ink-3); margin-bottom: 12px; }
+.panel svg { width: 100%; display: block; }
+.alegend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 6px 0 0; }
+.alegend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tt th, .tt td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.tt th:first-child, .tt td:first-child { text-align: left; }
+.tt th { font-weight: 600; color: var(--ink-2); font-size: 12.5px; }
+.tt .on { font-weight: 600; color: var(--ink); }
+.tt td i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.tt td:first-child { white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+.gsel { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.gsel button { font: 500 13.5px var(--sans); border: 1px solid var(--rule); background: var(--paper); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
+.gsel button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.grows { display: grid; gap: 10px; }
+.grow { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 12px; align-items: center; }
+.grow .gl { font-size: 14px; text-align: right; line-height: 1.25; }
+.gbars { display: grid; gap: 3px; }
+.gbar { display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 8px; align-items: center; }
+.gtrack { height: 9px; background: var(--paper); border-radius: 2px; position: relative; }
+.gfill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+.gv { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.browse { display: flex; flex-wrap: wrap; gap: 6px; }
+.browse button { font: 400 13.5px var(--sans); border: 1px solid var(--rule); background: var(--paper); border-radius: 999px; padding: 4px 11px; cursor: pointer; color: var(--ink); }
+.browse button:hover { border-color: var(--ink-3); }
+.catsel { font: 400 15px var(--sans); padding: 7px 10px; border: 1px solid var(--ink-3); border-radius: 6px; margin-bottom: 12px; max-width: 100%; }
+.how h2 { font-family: var(--sans); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); margin-bottom: 10px; }
+.how p { font-size: 14.5px; color: var(--ink-2); margin-bottom: 10px; max-width: 46em; }
+.empty { font-size: 15px; color: var(--ink-2); }
+#chart { overflow-x: auto; }
+@media (max-width: 640px) {
+  .grow { grid-template-columns: minmax(0, 96px) minmax(0, 1fr); gap: 8px; }
+  .gbar { grid-template-columns: minmax(0, 1fr) 58px; }
+  #chart svg { min-width: 520px; }                  /* keeps the axis text legible; the chart scrolls sideways */
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="../" aria-label="State of the Prompt, home">
+      <img src="../assets/logo.svg" width="30" height="30" alt="">
+      State of the Prompt
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="../#insights">Insights</a><a href="../reports/">Reports</a><a href="../explore/">Explore</a><a href="../ask/">Ask</a><a href="./" aria-current="page">Trends</a><a href="../about/">About</a><a href="../about/#team">Team</a><a href="../about/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="thead">
+  <div class="wrap">
+    <p class="kicker">Trends</p>
+    <h1>Who and what people mention</h1>
+    <p class="sub">Pick up to five people, places, products or other terms from our list and compare how often people mention them in their own messages to ChatGPT, month by month and across groups.</p>
+    <form class="pick" id="pick" autocomplete="off">
+      <label for="term" style="position:absolute;left:-9999px;">Add a term</label>
+      <input id="term" list="termlist" placeholder="Type a name, place or thing, e.g. Taylor Swift">
+      <datalist id="termlist"></datalist>
+      <button type="submit">Add</button>
+    </form>
+    <div class="notice" id="notice" role="status" hidden></div>
+    <div class="chips" id="chips"></div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <p class="hint">Try <a href="?t=" data-ex="Donald Trump|Elon Musk|Joe Biden">Trump, Musk and Biden</a> · <a href="?t=" data-ex="Ozempic and other GLP-1 drugs|Weight loss">Ozempic and weight loss</a> · <a href="?t=" data-ex="Christmas|Thanksgiving|Halloween">Christmas, Thanksgiving and Halloween</a> · <a href="?t=" data-ex="TikTok|Instagram|YouTube|Facebook">TikTok, Instagram, YouTube and Facebook</a></p>
+  </div>
+</section>
+
+<div class="wrap tbody">
+  <div class="measure">
+    <span class="lbl" id="m-lbl">Measure</span>
+    <div class="seg" role="group" aria-labelledby="m-lbl">
+      <button type="button" data-m="conv" aria-pressed="true">Share of conversations</button>
+      <button type="button" data-m="people" aria-pressed="false">Share of people</button>
+    </div>
+  </div>
+  <section class="panel" aria-labelledby="c-h">
+    <h2 id="c-h">Mentions per 1,000 conversations, by month</h2>
+    <p class="note" id="c-note">How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.</p>
+    <div id="chart"><p class="empty">Add a term above to begin.</p></div>
+  </section>
+  <section class="panel" aria-labelledby="t-h">
+    <h2 id="t-h">Over the whole year</h2>
+    <div class="tablewrap" id="table"></div>
+  </section>
+  <section class="panel" aria-labelledby="g-h">
+    <h2 id="g-h">Who mentions them</h2>
+    <p class="note" id="g-note"></p>
+    <div class="gsel" id="gsel" role="group" aria-label="Compare by"></div>
+    <div id="groups"></div>
+  </section>
+  <section class="panel" aria-labelledby="b-h">
+    <h2 id="b-h">Our list of terms</h2>
+    <p class="note">The terms this site tracks, by broad category, most mentioned first. The list is a selection: a name or word that is not on it may well come up in the conversations; it simply has not been added here. Terms mentioned too rarely to chart month by month are left out.</p>
+    <label for="cat" style="position:absolute;left:-9999px;">Category</label>
+    <select id="cat" class="catsel"></select>
+    <div class="browse" id="browse"></div>
+  </section>
+  <section class="how" aria-labelledby="how-h">
+    <h2 id="how-h">How mentions are counted</h2>
+    <p>A conversation mentions a term when the words appear in one of the person’s own messages, ignoring capital letters and punctuation; ChatGPT’s replies are not counted. Spelling variants and nicknames count, and some phrases are excluded on purpose (“hot dog” does not count as a dog). A mention says nothing about what the conversation is mainly about.</p>
+    <p>“Share of conversations” is how many of every 1,000 conversations mention the term. “Share of people” is the percentage of people who mentioned it at least once: over the year for the table and the groups, and among the people who used ChatGPT that month for the chart. Conversation shares give more weight to people who use ChatGPT heavily; people shares count everyone once.</p>
+    <p>Figures cover conversations by adults (18 and over), July 2025 to June 2026, in the panelist’s local time. A figure is published only when at least 20 different people stand behind it, and is withheld when five people supply more than half of it. A month with fewer mentions than that appears as a hollow point inside the hatched band, whose top is the publishing threshold: the true value is somewhere below it. Rates below 1 per 1,000 are shown to two decimals so that small differences are visible.</p>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>State of the Prompt · Rutgers University, School of Communication and Information</span>
+    <span><a href="../about/">About</a> · <a href="../ask/">Ask the data</a> · <a href="../explore/">Dashboard</a></span>
+  </div>
+</footer>
+
+<script src="../assets/ask.js"></script>
+<script>
+(function () {
+  'use strict';
+  const A = window.PromptAsk, MAX = 5, MIN_MONTHS = 6;   // a term needs 6 publishable months to be charted
+  const COLORS = ['#b00b33', '#0e77a4', '#858585', '#c99a2e', '#3d7a5a'];
+  const DIMS = [['age', 'Age'], ['gender', 'Gender'], ['income', 'Income'], ['education', 'Education'], ['race', 'Race and ethnicity'],
+    ['hispanic', 'Hispanic origin'], ['region', 'Region'], ['employment', 'Employment'], ['children', 'Children']];
+  const SHORT = { '18-24': '18–24', '25-34': '25–34', '35-44': '35–44', '45-54': '45–54', '55-64': '55–64', '65+': '65 and over',
+    Female: 'Women', Male: 'Men', 'Less than $25,000': 'Under $25k', '$25,000 to $34,999': '$25k–35k', '$35,000 to $49,999': '$35k–50k',
+    '$50,000 to $74,999': '$50k–75k', '$75,000 to $99,999': '$75k–100k', '$100,000 or more': '$100k and over',
+    'Some High School or Less': 'Some high school', 'Finished High School': 'High school', 'Some College, A.A. Degree or Technical College': 'Some college',
+    'Finished College (4-year degree)': 'Bachelor’s degree', 'Post Graduate Study or Degree': 'Postgraduate',
+    Caucasian: 'White', 'African American/Black': 'Black', 'Hispanic/Latino': 'Hispanic or Latino', 'Native American/Alaskan': 'Native American', Other: 'Other race',
+    Student: 'Students', Homemaker: 'Homemakers', 'Full-time White Collar/Professional': 'White-collar', 'Full-time Blue Collar': 'Blue-collar',
+    'Yes, and at least one lives in my home': 'Child at home', 'Yes, but they do not live in my home': 'Children elsewhere' };
+  const lab = (dim, lv) => dim === 'hispanic' ? (lv === 'Yes' ? 'Hispanic origin' : 'Not Hispanic') : dim === 'children' && lv === 'No' ? 'No children' : (SHORT[lv] || lv);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const pc = v => v == null ? 'not shown' : (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%';
+  const pcAxis = v => (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%';
+  let M = null, byName = {}, sel = [], dim = 'age', meas = 'conv';
+  const charted = t => t.mo == null || t.mo >= MIN_MONTHS;    // no count (older data) means chartable
+
+  function setMsg(s) { document.getElementById('msg').textContent = s || ''; }
+  function notice(html) {
+    const n = document.getElementById('notice');
+    n.innerHTML = html || ''; n.hidden = !html;
+  }
+  function syncURL() {
+    const q = new URLSearchParams();
+    if (sel.length) q.set('t', sel.join(','));
+    if (meas === 'people') q.set('m', 'people');
+    history.replaceState(null, '', q.toString() ? '?' + q.toString() : location.pathname);
+  }
+  function add(id) {
+    const t = M.byId[id];
+    if (!t) return;
+    if (!charted(t)) { notTooRare(t); return; }
+    if (sel.includes(id)) { setMsg(t.name + ' is already on the chart.'); return; }
+    if (sel.length >= MAX) { setMsg('Up to five terms at a time. Remove one to add another.'); return; }
+    sel.push(id); setMsg(''); notice(''); draw();
+  }
+  function remove(id) { sel = sel.filter(x => x !== id); draw(); }
+  function notOnList(text) {
+    notice('<p><b>“' + esc(text) + '” is not on our list of terms.</b></p>' +
+      '<p>This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well be mentioned in the conversations; it simply has not been added here yet. Browse <a href="#b-h">our list of terms</a> below, or ask about a broader subject on the <a href="../ask/">Ask page</a>.</p>');
+  }
+  function notTooRare(t) {
+    notice('<p><b>“' + esc(t.name) + '” is on our list, but it is mentioned too rarely to chart month by month.</b></p>' +
+      '<p>Most months have too few conversations mentioning it to publish a figure. The <a href="../ask/?q=' + encodeURIComponent('How often do people mention ' + t.name + '?') + '">Ask page</a> shows how often it comes up over the whole year.</p>');
+  }
+  function find(text) {                 // a typed name, or a term whose name or phrase matches
+    const t = text.trim().toLowerCase();
+    if (!t) return null;
+    if (byName[t]) return byName[t];
+    const hit = M.terms.find(x => x.name.toLowerCase() === t || [].concat(x.phrases).includes(t)) ||
+      M.terms.find(x => charted(x) && x.name.toLowerCase().startsWith(t)) || M.terms.find(x => charted(x) && x.name.toLowerCase().includes(t));
+    return hit ? hit.id : null;
+  }
+
+  function draw() {
+    syncURL();
+    document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === meas)));
+    const people = meas === 'people';
+    document.getElementById('c-h').textContent = people ? 'Share of people who mentioned it, by month' : 'Mentions per 1,000 conversations, by month';
+    document.getElementById('c-note').textContent = people
+      ? 'Of the people who used ChatGPT that month, the percentage who mentioned the term at least once. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.'
+      : 'How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.';
+    document.getElementById('g-note').textContent = people
+      ? 'The percentage of each group’s people who mentioned the term at least once during the year. “Too few” means too few of the group’s conversations mention it to publish a figure, or a handful of people supply most of them.'
+      : 'Mentions per 1,000 of each group’s conversations. “Too few” means too few of the group’s conversations mention it to publish a figure, or a handful of people supply most of them.';
+    const chips = document.getElementById('chips');
+    chips.innerHTML = sel.map((id, i) => '<span class="chip"><i style="background:' + COLORS[i] + '"></i>' + esc(M.byId[id].name) +
+      '<button type="button" aria-label="Remove ' + esc(M.byId[id].name) + '" data-rm="' + id + '">×</button></span>').join('');
+    chips.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => remove(b.dataset.rm)));
+    if (!sel.length) {
+      document.getElementById('chart').innerHTML = '<p class="empty">Add a term above to begin.</p>';
+      document.getElementById('table').innerHTML = ''; document.getElementById('groups').innerHTML = ''; document.getElementById('gsel').innerHTML = '';
+      return;
+    }
+    Promise.all(sel.map(A.loadTerm)).then(ds => {
+      const months = A.months();
+      const series = sel.map((id, i) => ({ name: M.byId[id].name, values: months.map(k => ds[i] ? (people ? (ds[i].month_pp || {})[k] : ds[i].month[k]) : null),
+        low: months.map(k => !!(ds[i] && (ds[i].month_low || []).includes(k))), held: months.map(k => !!(ds[i] && (ds[i].month_held || []).includes(k))) }));
+      document.getElementById('chart').innerHTML = people
+        ? A.linesSVG(series, { fmt: pc, axis: pcAxis, aria: 'Share of people who mentioned each term, by month', floor: A.monthFloors('people') })
+        : A.linesSVG(series, { floor: A.monthFloors('conv') });
+      let h = '<table class="tt"><thead><tr><th>Term</th><th' + (people ? '' : ' class="on"') + '>Per 1,000 conversations</th><th' + (people ? ' class="on"' : '') +
+        '>People who mentioned it</th><th>Conversations per person</th><th>Peak month</th></tr></thead><tbody>';
+      sel.forEach((id, i) => {
+        const t = M.byId[id], d = ds[i];
+        let peak = '–';
+        if (d) {
+          const src = people ? (d.month_pp || {}) : d.month;
+          const mv = months.filter(k => src[k] != null);
+          if (mv.length) peak = A.monthName(mv.reduce((a, b) => (src[b] > src[a] ? b : a)));
+        }
+        h += '<tr><td><i style="background:' + COLORS[i] + '"></i>' + esc(t.name) + '</td><td' + (people ? '' : ' class="on"') + '>' + A.fmtK(t.per1000) +
+          '</td><td' + (people ? ' class="on"' : '') + '>' + pc(t.pp) + '</td><td>' + t.cpp.toFixed(1) + '</td><td>' + esc(peak) + '</td></tr>';
+      });
+      document.getElementById('table').innerHTML = h + '</tbody></table>';
+      drawGroups(ds);
+    });
+  }
+  function drawGroups(ds) {
+    const people = meas === 'people', field = people ? 'pp' : 'per1000', fmt = people ? pc : A.fmtK;
+    const gs = document.getElementById('gsel');
+    gs.innerHTML = DIMS.map(([k, n]) => '<button type="button" data-dim="' + k + '" aria-pressed="' + (k === dim) + '">' + n + '</button>').join('');
+    gs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { dim = b.dataset.dim; drawGroups(ds); }));
+    const first = ds.find(d => d);
+    const levels = first ? first.groups[dim].map(c => c.level) : [];
+    const vals = levels.map(lv => sel.map((id, i) => { const c = ds[i] && ds[i].groups[dim].find(x => x.level === lv); return c ? c[field] : null; }));
+    const max = Math.max(...[].concat(...vals).filter(v => v != null), 0.0001) * 1.1;
+    document.getElementById('groups').innerHTML = '<div class="grows">' + levels.map((lv, r) =>
+      '<div class="grow"><span class="gl">' + esc(lab(dim, lv)) + '</span><div class="gbars">' + sel.map((id, i) => {
+        const v = vals[r][i];
+        return '<div class="gbar"><span class="gtrack">' + (v == null ? '' : '<span class="gfill" style="width:' + (v / max * 100).toFixed(1) + '%;background:' + COLORS[i] + '"></span>') +
+          '</span><span class="gv"' + (v == null ? ' title="Too few mentions in this group to publish a figure, or a handful of people supply most of them"' : '') + '>' + (v == null ? 'Too few' : fmt(v)) + '</span></div>';
+      }).join('') + '</div></div>').join('') + '</div>';
+  }
+  // The list's many specific categories, folded into a dozen broad ones for browsing.
+  const BROAD = [
+    ['Politics and news', ['News and policy', 'People: US politics', 'People: world leaders']],
+    ['Public figures', ['People: entertainment and sports', 'People: media and influencers', 'People: business and tech', 'People: other public figures', 'People: historical']],
+    ['Health', ['Health and medicine', 'Medications']],
+    ['Technology and apps', ['Technology and AI', 'Apps and platforms']],
+    ['Brands, shopping and cars', ['Companies and brands', 'Cars']],
+    ['Entertainment and sports', ['Entertainment', 'Sports']],
+    ['Food, home and pets', ['Food and drink', 'Home and garden', 'Pets and animals']],
+    ['Money, work and school', ['Money and work', 'School and learning']],
+    ['Family and relationships', ['Relationships and family']],
+    ['Travel, holidays and weather', ['Travel', 'Holidays and events', 'Weather and disasters']],
+    ['Religion, science and history', ['Religion and beliefs', 'Science and history']],
+    ['Places', ['Places: countries', 'Places: US states', 'Places: cities']]];
+  // Topic-model words go to the broad category their topic's label points to.
+  const TOPIC_RULES = [
+    [/politic|government|\blaw\b|legal|court|immigra|\belection|police|news|social services|benefit/, 'Politics and news'],
+    [/health|medic|symptom|diet|fitness|nutrition|workout|mental|sleep|pregnan|dental|skin|drug/, 'Health'],
+    [/tax|financ|money|budget|invest|loan|job|resume|career|business|marketing|work|school|math|essay|homework|academic|study|exam|grammar|language|translat|writing/, 'Money, work and school'],
+    [/food|recipe|cook|restaurant|menu|drink|garden|\bhome\b|house|housing|interior|clean|pet|animal|insect|arachnid|plant|repair|diy/, 'Food, home and pets'],
+    [/tech|computer|phone|software|code|coding|program|device|hardware|spreadsheet|image|prompt|\bai\b|social media/, 'Technology and apps'],
+    [/relationship|family|dating|parent|child|infant|friend|emotion|companion|wedding|chat/, 'Family and relationships'],
+    [/travel|trip|weather|holiday|gift|event|time calc/, 'Travel, holidays and weather'],
+    [/shopping|product|brand|price|\bcars?\b|vehicle|automotive|fashion|beauty|outfit|hair|jewelry|coin|collect/, 'Brands, shopping and cars'],
+    [/sport|bett|gambl|game|gaming|music|movie|film|\btv\b|show|entertain|anime|book|story|fiction|character|lore|creative|art|design|celebr|puzzle/, 'Entertainment and sports'],
+    [/relig|spiritual|bible|astrolog|horoscop|history|scien|space|physics|chemis|biolog/, 'Religion, science and history']];
+  function broadCat(cat) {
+    const b = BROAD.find(x => x[1].includes(cat));
+    if (b) return b[0];
+    if (/^Topic: /.test(cat)) {
+      const l = cat.slice(7).toLowerCase(), r = TOPIC_RULES.find(x => x[0].test(l));
+      return r ? r[1] : 'More words';
+    }
+    return 'More words';
+  }
+  function browse() {
+    const cs = document.getElementById('cat');
+    const order = BROAD.map(x => x[0]).concat(['More words']);
+    const cats = order.filter(c => M.terms.some(t => charted(t) && broadCat(t.cat) === c));
+    cs.innerHTML = cats.map(c => '<option>' + esc(c) + '</option>').join('');
+    const show = () => {
+      const list = M.terms.filter(t => broadCat(t.cat) === cs.value && charted(t)).sort((a, b) => b.per1000 - a.per1000);
+      document.getElementById('browse').innerHTML = list.map(t => '<button type="button" data-id="' + t.id + '" title="' + esc(A.fmtK(t.per1000)) + ' per 1,000 conversations">' + esc(t.name) + '</button>').join('');
+      document.getElementById('browse').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { add(b.dataset.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+    };
+    cs.addEventListener('change', show); show();
+  }
+
+  A.load('../data/').then(() => {
+    M = A.mentions();
+    if (!M) { document.getElementById('chart').innerHTML = '<p class="empty">The mentions data could not be loaded.</p>'; return; }
+    M.terms.forEach(t => { byName[t.name.toLowerCase()] = t.id; });
+    document.getElementById('termlist').innerHTML = M.terms.filter(charted).map(t => '<option value="' + esc(t.name) + '">').join('');
+    document.getElementById('pick').addEventListener('submit', e => {
+      e.preventDefault();
+      const inp = document.getElementById('term'), text = inp.value.trim();
+      if (!text) return;
+      const id = find(text);
+      if (!id) { notOnList(text); return; }
+      add(id); inp.value = '';
+    });
+    document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { meas = b.dataset.m; draw(); }));
+    document.querySelectorAll('[data-ex]').forEach(a => {
+      const ids = a.dataset.ex.split('|').map(n => byName[n.toLowerCase()]).filter(id => id && charted(M.byId[id]));
+      a.href = '?t=' + ids.join(',');
+      a.addEventListener('click', e => { e.preventDefault(); sel = ids.slice(0, MAX); notice(''); draw(); });
+    });
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('m') === 'people') meas = 'people';
+    const asked = (qs.get('t') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const rare = asked.filter(id => M.byId[id] && !charted(M.byId[id]));
+    sel = asked.filter(id => M.byId[id] && charted(M.byId[id])).slice(0, MAX);
+    if (rare.length) notTooRare(M.byId[rare[0]]);
+    browse();
+    draw();
+  }).catch(() => { document.getElementById('chart').innerHTML = '<p class="empty">The data could not be loaded. Reload the page to try again.</p>'; });
+})();
+</script>
+</body>
+</html>

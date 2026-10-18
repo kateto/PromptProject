@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page Not Found · State of the Prompt</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500&family=Public+Sans:wght@400;500&display=swap">
+<style>
+:root { --night: #0f1724; --on-night: #e8ecf2; --on-night-2: #aab4c4; --scarlet: #cc0033; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--night); color: var(--on-night); font-family: "Public Sans", "Segoe UI", Arial, sans-serif; padding: 24px 16px; }
+main { max-width: 34em; }
+h1 { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 40px; line-height: 1.1; color: #fff; margin: 0 0 12px; }
+p { color: var(--on-night-2); margin: 0 0 22px; line-height: 1.6; }
+a { display: inline-block; background: var(--scarlet); color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 4px; font-weight: 500; }
+</style>
+</head>
+<body>
+<main>
+  <h1>This page does not exist</h1>
+  <p>The link may be out of date. The home page has the latest insights, reports and the dashboard.</p>
+  <a id="home" href="/">Go to the home page</a>
+</main>
+<script>
+/* GitHub Pages serves this page at any depth; point the link at the site root,
+   which is the repository folder on github.io and "/" on a custom domain. */
+(function () {
+  var h = location.hostname, p = location.pathname.split('/');
+  if (/\.github\.io$/.test(h) && p.length > 2 && p[1]) document.getElementById('home').href = '/' + p[1] + '/';
+})();
+</script>
+</body>
+</html>

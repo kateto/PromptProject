@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Asks About What · State of the Prompt</title>
+<meta name="description" content="Compare how often groups of people bring each subject to ChatGPT: by age, gender, income, education, race and ethnicity, and region.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: navy site header, then a light working surface: controls, summary tiles, bars beside a plain-words card, and a full subject-by-group heatmap. */
+:root {
+  --night: #0f1724;
+  --night-line: rgba(255, 255, 255, 0.12);
+  --on-night: #e8ecf2;
+  --on-night-2: #aab4c4;
+  --glow: #ffcf86;
+  --ink: #13233a;
+  --ink-2: #595959;
+  --ink-3: #7d7d7d;
+  --rule: #e1e1e1;
+  --paper: #ffffff;
+  --mist: #f3f3f3;
+  --scarlet: #cc0033;
+  --scarlet-dark: #a3002a;
+  --bar: #b00b33;
+  --rest: #cfcfcf;
+  --blue: #0e77a4;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--mist); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--serif); font-weight: 500; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: inherit; }
+button, select { font-family: var(--sans); }
+:focus-visible { outline: 2px solid var(--scarlet); outline-offset: 2px; }
+.skip { position: absolute; left: -9999px; top: 8px; background: #fff; color: var(--ink); padding: 8px 12px; z-index: 10; }
+.skip:focus { left: 8px; }
+
+.top { background: var(--night); color: var(--on-night); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 21px; font-weight: 500; text-decoration: none; }
+.brand img { display: block; }
+.nav { display: flex; gap: 6px 22px; font-size: 14px; color: var(--on-night-2); flex-wrap: wrap; }
+@media (max-width: 480px) { .nav { column-gap: 16px; } }
+.nav a { text-decoration: none; }
+.nav a:hover, .nav a[aria-current] { color: #fff; }
+.nav a[aria-current] { border-bottom: 2px solid var(--scarlet); padding-bottom: 2px; }
+
+.head { background: var(--paper); border-bottom: 1px solid var(--rule); padding-block: 22px 24px; }
+.head h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; }
+.head .lede { color: var(--ink-2); max-width: 46em; margin-top: 8px; font-size: 16px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: end; padding-block: 20px; }
+.ctl { display: grid; gap: 6px; min-width: 0; }
+.ctl-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); }
+.seg { display: flex; flex-wrap: wrap; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 7px 12px; border-radius: 4px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.seg button:hover { color: var(--ink); background: var(--mist); }
+.seg button[aria-pressed="true"] { background: var(--night); color: #fff; }
+select { appearance: none; background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23595959' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; border: 1px solid var(--rule); border-radius: 6px; padding: 9px 36px 9px 12px; font-size: 15px; color: var(--ink); min-width: 240px; max-width: 100%; cursor: pointer; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.tile { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.tile .k { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); }
+.tile .v { font-family: var(--serif); font-size: 32px; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.tile.hi .v { color: var(--bar); }
+.tile.lo .v { color: var(--blue); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
+.panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 18px 20px; min-width: 0; }
+.panel h2 { font-size: 22px; margin-bottom: 4px; }
+.panel .sub { font-size: 13px; color: var(--ink-3); margin-bottom: 16px; }
+.bars { display: grid; gap: 10px; grid-auto-rows: 1fr; } /* every row as tall as the tallest, so a wrapped label does not leave the chart uneven */
+.brow { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 56px; gap: 12px; align-items: center; }
+.blabel { font-size: 14px; line-height: 1.25; text-align: right; color: var(--ink); overflow-wrap: anywhere; }
+.track { position: relative; height: 22px; background: var(--mist); border-radius: 3px; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--rest); transition: width 0.35s ease; }
+.fill.max { background: var(--bar); }
+.fill.min { background: var(--blue); }
+.ref { position: absolute; top: -5px; bottom: -5px; border-left: 2px dashed var(--ink); opacity: 0.55; }
+.bval { font-size: 14px; font-variant-numeric: tabular-nums; }
+.reflegend { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-top: 14px; }
+.reflegend i { width: 0; height: 14px; border-left: 2px dashed var(--ink); opacity: 0.55; display: inline-block; }
+
+.words { font-family: var(--serif); font-size: 21px; line-height: 1.4; color: var(--ink); }
+.sizes { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sizes th { text-align: left; font-weight: 600; color: var(--ink-3); border-bottom: 1px solid var(--rule); padding: 6px 4px; }
+.sizes td { padding: 5px 4px; border-bottom: 1px solid var(--mist); }
+.sizes td.n, .sizes th.n { text-align: right; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.btn { font: 500 14px var(--sans); padding: 8px 14px; border-radius: 4px; border: 1px solid var(--ink-3); background: var(--paper); color: var(--ink); cursor: pointer; }
+.btn:hover { background: var(--mist); }
+.copied { font-size: 13px; color: var(--ink-2); align-self: center; }
+
+.heat-panel { margin-top: 18px; }
+.heat-scroll { overflow-x: auto; }
+.heat { border-collapse: separate; border-spacing: 2px; font-size: 13px; font-variant-numeric: tabular-nums; min-width: 560px; width: 100%; }
+.heat th { font-weight: 600; color: var(--ink-2); padding: 6px 6px; text-align: center; font-size: 12px; vertical-align: bottom; }
+.heat th.rowh { text-align: left; }
+.heat td { text-align: center; padding: 6px 4px; border-radius: 3px; }
+.heat td.rowl { text-align: left; color: var(--ink); white-space: nowrap; padding-right: 12px; }
+.heat td.all { color: var(--ink-2); }
+.heat tr { cursor: pointer; }
+.heat tr:hover td.rowl, .heat tr:focus td.rowl { color: var(--scarlet); }
+.heat tr:focus { outline: none; } /* focus shows as the red row label, not a box */
+.heat tr.sel td.rowl { font-weight: 600; color: var(--scarlet); }
+.heat tr.sel td { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.heat tr.sel td.rowl, .heat tr.sel td.all { box-shadow: none; }
+.scale { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-2); margin-top: 12px; flex-wrap: wrap; }
+.scale .grad { width: 220px; max-width: 60vw; height: 10px; border-radius: 2px; background: linear-gradient(90deg, #0e77a4, #f2f2f2 50%, #c24362); }
+
+.notes { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; padding-block: 4px 40px; }
+.notes h3 { font-family: var(--sans); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); margin-bottom: 6px; }
+.notes p { font-size: 14px; color: var(--ink-2); }
+.notes a { color: var(--scarlet); }
+
+footer { background: var(--night); color: var(--on-night-2); padding-block: 22px; font-size: 13px; }
+.foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.foot a { text-decoration: none; }
+.foot a:hover { color: #fff; }
+
+@media (max-width: 900px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .main, .notes { grid-template-columns: minmax(0, 1fr); }
+  .brow { grid-template-columns: minmax(0, 110px) minmax(0, 1fr) 52px; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="../" aria-label="State of the Prompt, home">
+      <img src="../assets/logo.svg" width="30" height="30" alt="">
+      State of the Prompt
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="../#insights">Insights</a><a href="../reports/">Reports</a><a href="./" aria-current="page">Explore</a><a href="../ask/">Ask</a><a href="../trends/">Trends</a><a href="../about/">About</a><a href="../about/#team">Team</a><a href="../about/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="head">
+  <div class="wrap">
+    <h1>Who asks about what</h1>
+    <p class="lede">Pick a subject and a way of dividing people, and see how often each group brings that subject to ChatGPT. Every figure is an aggregate over thousands of conversations.</p>
+  </div>
+</section>
+
+<main class="wrap" id="main">
+  <div class="controls">
+    <div class="ctl">
+      <span class="ctl-label" id="dim-l">Compare by</span>
+      <div class="seg" id="dims" role="group" aria-labelledby="dim-l"></div>
+    </div>
+    <div class="ctl">
+      <label class="ctl-label" for="topic">Subject</label>
+      <select id="topic"></select>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label" id="mea-l">Measure</span>
+      <div class="seg" id="measure" role="group" aria-labelledby="mea-l">
+        <button type="button" data-m="0" aria-pressed="true">Share of conversations</button>
+        <button type="button" data-m="1" aria-pressed="false">Share of people</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tiles" aria-live="polite">
+    <div class="tile"><p class="k">Everyone</p><p class="v" id="t-all">–</p><p class="s" id="t-all-s"></p></div>
+    <div class="tile hi"><p class="k">Highest</p><p class="v" id="t-hi">–</p><p class="s" id="t-hi-s"></p></div>
+    <div class="tile lo"><p class="k">Lowest</p><p class="v" id="t-lo">–</p><p class="s" id="t-lo-s"></p></div>
+    <div class="tile"><p class="k">Gap</p><p class="v" id="t-gap">–</p><p class="s">highest against lowest group</p></div>
+  </div>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="bars-h">
+      <h2 id="bars-h"></h2>
+      <p class="sub" id="bars-sub"></p>
+      <div class="bars" id="bars"></div>
+      <p class="reflegend"><i></i><span id="reflabel"></span></p>
+    </section>
+    <section class="panel" aria-labelledby="words-h">
+      <h2 id="words-h">In plain words</h2>
+      <p class="sub">Written from the published totals</p>
+      <p class="words" id="words"></p>
+      <table class="sizes" aria-label="Group sizes">
+        <thead><tr><th>Group</th><th class="n">People</th><th class="n">Conversations</th></tr></thead>
+        <tbody id="sizes"></tbody>
+      </table>
+      <div class="actions">
+        <button class="btn" type="button" id="copy">Copy this sentence</button>
+        <span class="copied" id="copied" aria-live="polite"></span>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel heat-panel" aria-labelledby="heat-h">
+    <h2 id="heat-h">Every subject at once</h2>
+    <p class="sub" id="heat-sub"></p>
+    <div class="heat-scroll"><table class="heat" id="heat"></table></div>
+    <div class="scale"><span>Half as often</span><span class="grad" aria-hidden="true"></span><span>Twice as often as everyone</span></div>
+  </section>
+
+  <div class="notes">
+    <div><h3>What the shares mean</h3><p>Share of conversations counts every conversation, so heavy users count for more. Share of people is the percentage of people in a group who had at least one conversation mainly about the subject. A dash marks a figure withheld because too few conversations, or a handful of people, stand behind it.</p></div>
+    <div><h3>How subjects were coded</h3><p>A language model read the person’s side of each conversation and named its main subject from a list of 28, or marked it as unclear or not on the list. Creative writing was added to the list later, so its share is a lower bound.</p></div>
+    <div><h3>Who is in the data</h3><p><span id="n-people">65,689</span> adults on a US research panel, counting the conversations they had at 18 or older, July 2025 to June 2026. Age groups use each person’s age in July 2026. The panel is not a random sample of the country, so compare groups rather than reading any figure as national. <a href="../about/">More about the data</a>.</p></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>State of the Prompt · Rutgers University, School of Communication and Information</span>
+    <span><a href="../about/">About</a> · <a href="../reports/">Reports</a> · <a href="../ask/">Ask the data</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  const LAB = { health_medicine: 'health and medicine', work_career_business: 'work, career and business', art_design_images: 'art, design and images', entertainment_games: 'entertainment and games', relationships_family: 'relationships and family', money_shopping_finance: 'money, shopping and finance', food_drink: 'food and drink', technology_devices: 'technology and devices', politics_government_law: 'politics, government and law', home_garden_hobbies: 'home, garden and hobbies', education_schools: 'education and schools', beauty_fashion: 'beauty and fashion', travel_places_vehicles: 'travel, places and vehicles', social_media_online: 'social media and online platforms', history_society_culture: 'history, society and culture', religion_spirituality_philosophy: 'religion, spirituality and philosophy', math: 'math', science_nature: 'science and nature', fitness_nutrition: 'fitness and nutrition', sports: 'sports', pets_animals: 'pets and animals', mental_health: 'mental health', sex_sexuality: 'sex and sexuality', languages_translation: 'languages and translation', personal_growth: 'personal growth', social_chat_companionship: 'social chat and companionship', creative_writing: 'creative writing', programming: 'programming' };
+  const DIMS = [['age', 'Age', 'age group'], ['gender', 'Gender', 'gender'], ['income', 'Income', 'income group'], ['education', 'Education', 'education level'], ['race', 'Race and ethnicity', 'group'], ['region', 'Region', 'region']];
+  const LV = { '18-24': '18–24', '25-34': '25–34', '35-44': '35–44', '45-54': '45–54', '55-64': '55–64', '65+': '65 and over', Female: 'Women', Male: 'Men', 'Less than $25,000': 'Under $25k', '$25,000 to $34,999': '$25k–35k', '$35,000 to $49,999': '$35k–50k', '$50,000 to $74,999': '$50k–75k', '$75,000 to $99,999': '$75k–100k', '$100,000 or more': '$100k and over', 'Some High School or Less': 'Some high school', 'Finished High School': 'High school', 'Some College, A.A. Degree or Technical College': 'Some college or associate', 'Finished College (4-year degree)': 'Bachelor’s degree', 'Post Graduate Study or Degree': 'Postgraduate', Caucasian: 'White', 'African American/Black': 'Black', 'Hispanic/Latino': 'Hispanic or Latino', Asian: 'Asian', 'Native American/Alaskan': 'Native American', 'Middle Eastern': 'Middle Eastern', 'Pacific Islander': 'Pacific Islander', Other: 'Other', Northeast: 'Northeast', Midwest: 'Midwest', South: 'South', West: 'West' };
+  const WHO = { age: l => l === '65+' ? 'people 65 and over' : 'people aged ' + l.replace('-', '–'), gender: l => l === 'Female' ? 'women' : 'men', income: l => ({ 'Less than $25,000': 'people with household income under $25,000', '$100,000 or more': 'people with household income of $100,000 or more' })[l] || 'people with household income of ' + l, education: l => ({ 'Some High School or Less': 'people who did not finish high school', 'Finished High School': 'high school graduates', 'Some College, A.A. Degree or Technical College': 'people with some college or an associate degree', 'Finished College (4-year degree)': 'people with a bachelor’s degree', 'Post Graduate Study or Degree': 'people with a postgraduate degree' })[l], race: l => l === 'Other' ? 'people of another race or ethnicity' : 'people who identify as ' + LV[l], region: l => 'people in the ' + l };
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  // The same rounding and wording as the reports and the Ask page: words up to twenty.
+  const NUMWORD = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
+    'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  const oneIn = p => { const n = 100 / p, r = n < 20 ? Math.round(n) : n < 40 ? Math.round(n / 5) * 5 : Math.round(n / 10) * 10; return r <= 20 ? NUMWORD[r] : String(r); };
+  const pct = v => v == null ? '–' : v.toFixed(1) + '%';
+  const S = { dim: 'age', topic: 'health_medicine', m: 0 };
+  let D = null;
+
+  // a link can preselect the view: explore/?topic=money_shopping_finance&dim=income&m=1
+  const P = new URLSearchParams(location.search);
+  if (LAB[P.get('topic')]) S.topic = P.get('topic');
+  if (DIMS.some(d => d[0] === P.get('dim'))) S.dim = P.get('dim');
+  if (P.get('m') === '1') S.m = 1;
+
+  const mix = (a, b, t) => { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return 'rgb(' + A.map((x, i) => Math.round(x + (B[i] - x) * t)).join(',') + ')'; };
+  const heatColor = r => { const t = Math.max(-1, Math.min(1, Math.log2(r))); return t >= 0 ? mix('#f2f2f2', '#c24362', t) : mix('#f2f2f2', '#0e77a4', -t); };
+
+  function init() {
+    const dims = document.getElementById('dims');
+    DIMS.forEach(([k, lab]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = lab; b.dataset.d = k; b.setAttribute('aria-pressed', k === S.dim); b.addEventListener('click', () => { S.dim = k; render(); }); dims.appendChild(b); });
+    const sel = document.getElementById('topic');
+    Object.keys(LAB).sort((a, b) => D.overall[b][0] - D.overall[a][0]).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = cap(LAB[t]); sel.appendChild(o); });
+    sel.value = S.topic; sel.addEventListener('change', () => { S.topic = sel.value; render(); });
+    document.querySelectorAll('#measure button').forEach(b => b.addEventListener('click', () => { S.m = +b.dataset.m; render(); }));
+    document.getElementById('copy').addEventListener('click', () => { const txt = document.getElementById('words').textContent, c = document.getElementById('copied'); const done = () => { c.textContent = 'Copied'; setTimeout(() => { c.textContent = ''; }, 1600); }; try { navigator.clipboard.writeText(txt).then(done).catch(() => { selectWords(); c.textContent = 'Press Ctrl+C to copy'; }); } catch (e) { selectWords(); c.textContent = 'Press Ctrl+C to copy'; } });
+  }
+  function selectWords() { const r = document.createRange(); r.selectNodeContents(document.getElementById('words')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+  function render() {
+    document.querySelectorAll('#dims button').forEach(b => b.setAttribute('aria-pressed', b.dataset.d === S.dim));
+    document.querySelectorAll('#measure button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.m === S.m));
+    document.getElementById('topic').value = S.topic;
+    const dimDef = DIMS.find(d => d[0] === S.dim), levels = D.dims[S.dim], lab = LAB[S.topic], all = D.overall[S.topic][S.m];
+    const vals = levels.map(l => l.v[S.topic][S.m]);
+    const shown = levels.map((l, i) => ({ l, v: vals[i] })).filter(x => x.v != null);
+    const hi = shown.length ? shown.reduce((a, b) => b.v > a.v ? b : a) : null, lo = shown.length ? shown.reduce((a, b) => b.v < a.v ? b : a) : null;
+    const mname = S.m === 0 ? 'of conversations' : 'of people';
+    document.getElementById('t-all').textContent = pct(all);
+    document.getElementById('t-all-s').textContent = S.m === 0 ? 'one conversation in ' + oneIn(all) : 'had at least one such conversation';
+    document.getElementById('t-hi').textContent = hi ? pct(hi.v) : '–'; document.getElementById('t-hi-s').textContent = hi ? LV[hi.l.level] : '';
+    document.getElementById('t-lo').textContent = lo ? pct(lo.v) : '–'; document.getElementById('t-lo-s').textContent = lo ? LV[lo.l.level] : '';
+    document.getElementById('t-gap').textContent = hi && lo ? (hi.v / lo.v).toFixed(1) + '×' : '–';
+    document.getElementById('bars-h').textContent = cap(lab) + ', by ' + dimDef[1].toLowerCase();
+    document.getElementById('bars-sub').textContent = S.m === 0 ? 'Share of each group’s conversations whose main subject is ' + lab : 'Share of people in each group with at least one conversation mainly about ' + lab;
+    const max = Math.max(all, ...shown.map(x => x.v)) * 1.12;
+    const bars = document.getElementById('bars'); bars.innerHTML = '';
+    levels.forEach((l, i) => {
+      const v = vals[i]; const row = document.createElement('div'); row.className = 'brow';
+      row.innerHTML = '<span class="blabel">' + LV[l.level] + '</span><span class="track"><span class="fill' + (hi && l === hi.l ? ' max' : (lo && l === lo.l ? ' min' : '')) + '" style="width:0"></span><span class="ref" style="left:' + (all / max * 100).toFixed(2) + '%"></span></span><span class="bval">' + pct(v) + '</span>';
+      bars.appendChild(row); requestAnimationFrame(() => { row.querySelector('.fill').style.width = (v == null ? 0 : v / max * 100).toFixed(2) + '%'; });
+    });
+    document.getElementById('reflabel').textContent = 'Everyone: ' + pct(all);
+    const W = WHO[S.dim]; let s;
+    if (!hi) s = 'These figures are withheld for every ' + dimDef[2] + '.';
+    else if (S.m === 0 && (hi.v / lo.v < 1.1 || oneIn(hi.v) === oneIn(lo.v))) {
+      // too close for "one in N" to tell apart: say so in percentages
+      s = cap(lab) + ' varies little by ' + dimDef[1].toLowerCase() + ': from ' + pct(lo.v) + ' of conversations for ' + W(lo.l.level) + ' to ' + pct(hi.v) + ' for ' + W(hi.l.level) + '. Across everyone it is ' + pct(all) + '.';
+    } else if (S.m === 0) {
+      s = shown.length === 2 ? cap(lab) + ' is one conversation in ' + oneIn(hi.v) + ' for ' + W(hi.l.level) + ' (' + pct(hi.v) + ') and one in ' + oneIn(lo.v) + ' for ' + W(lo.l.level) + ' (' + pct(lo.v) + ').'
+        : cap(lab) + ' is one conversation in ' + oneIn(hi.v) + ' for ' + W(hi.l.level) + ' (' + pct(hi.v) + '), the highest of any ' + dimDef[2] + ', and one in ' + oneIn(lo.v) + ' for ' + W(lo.l.level) + ' (' + pct(lo.v) + '), the lowest.';
+      s += ' Across everyone it is one in ' + oneIn(all) + '.';
+    } else {
+      s = shown.length === 2 ? hi.v.toFixed(0) + '% of ' + W(hi.l.level) + ' had at least one conversation mainly about ' + lab + ', against ' + lo.v.toFixed(0) + '% of ' + W(lo.l.level) + '.'
+        : hi.v.toFixed(0) + '% of ' + W(hi.l.level) + ' had at least one conversation mainly about ' + lab + ', the most of any ' + dimDef[2] + ', against ' + lo.v.toFixed(0) + '% of ' + W(lo.l.level) + '.';
+      s += ' Across everyone: ' + all.toFixed(0) + '%.';
+    }
+    document.getElementById('words').textContent = s;
+    document.getElementById('sizes').innerHTML = levels.map(l => '<tr><td>' + LV[l.level] + '</td><td class="n">' + l.people.toLocaleString('en-US') + '</td><td class="n">' + l.convs.toLocaleString('en-US') + '</td></tr>').join('');
+    document.getElementById('heat-sub').textContent = 'Each cell is a group’s share ' + mname + ', colored by how it compares with everyone. Click a row to chart it.';
+    const topics = Object.keys(LAB).sort((a, b) => D.overall[b][0] - D.overall[a][0]);
+    const heat = document.getElementById('heat');
+    let h = '<thead><tr><th class="rowh">Subject</th><th>Everyone</th>' + levels.map(l => '<th>' + LV[l.level] + '</th>').join('') + '</tr></thead><tbody>';
+    topics.forEach(t => { const o = D.overall[t][S.m]; h += '<tr data-t="' + t + '"' + (t === S.topic ? ' class="sel"' : '') + ' tabindex="0"><td class="rowl">' + cap(LAB[t]) + '</td><td class="all">' + pct(o) + '</td>' + levels.map(l => { const v = l.v[t][S.m]; if (v == null) return '<td title="Withheld">–</td>'; const r = v / o, bg = heatColor(r), dark = Math.abs(Math.log2(r)) > 0.85; return '<td style="background:' + bg + ';color:' + (dark ? '#ffffff' : '#13233a') + '" title="' + LV[l.level] + ': ' + pct(v) + '">' + v.toFixed(1) + '</td>'; }).join('') + '</tr>'; });
+    heat.innerHTML = h + '</tbody>';
+    heat.querySelectorAll('tbody tr').forEach(tr => { const go = () => { S.topic = tr.dataset.t; render(); document.getElementById('bars-h').scrollIntoView({ behavior: 'smooth', block: 'center' }); }; tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }); });
+  }
+
+  Promise.all([
+    fetch('../data/groups.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch('../data/site.json').then(r => r.ok ? r.json() : null).catch(() => null)
+  ]).then(([d, site]) => {
+    D = d;
+    if (site) document.getElementById('n-people').textContent = site.population.people.toLocaleString('en-US');
+    init(); render();
+  }).catch(() => { document.getElementById('words').textContent = 'The figures could not be loaded. Reload the page to try again.'; });
+})();
+</script>
+</body>
+</html>

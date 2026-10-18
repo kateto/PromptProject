@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>State of the Prompt</title>
+<meta name="description" content="A Rutgers University study of how people use AI in everyday life, based on a year of ChatGPT conversations shared by a US research panel. Every figure is an aggregate.">
+<meta property="og:title" content="State of the Prompt">
+<meta property="og:description" content="What people ask AI: a year of ChatGPT conversations from a US research panel, in aggregate.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a navy hero built on the 24-hour dial, then white editorial bands; navy returns for Explore and the footer. */
+:root {
+  --night: #0f1724;
+  --night-2: #16223a;
+  --night-line: rgba(255, 255, 255, 0.12);
+  --on-night: #e8ecf2;
+  --on-night-2: #aab4c4;
+  --glow: #ffcf86;
+  --ink: #13233a;
+  --ink-2: #595959;
+  --ink-3: #7d7d7d;
+  --rule: #e1e1e1;
+  --paper: #ffffff;
+  --mist: #f3f3f3;
+  --scarlet: #cc0033;
+  --scarlet-dark: #a3002a;
+  --data-red: #b00b33;
+  --data-blue: #0e77a4;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--serif); font-weight: 500; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: inherit; }
+.skip { position: absolute; left: -9999px; top: 8px; background: #fff; color: var(--ink); padding: 8px 12px; z-index: 10; }
+.skip:focus { left: 8px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 500 14px var(--sans); padding: 10px 18px; border-radius: 4px; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+.btn:focus-visible, .chip:focus-visible, input:focus-visible, .wlegend button:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+#dial g:focus { outline: none; } /* the selected hour already shows by dimming the others */
+.btn-red { background: var(--scarlet); color: #fff; }
+.btn-red:hover { background: var(--scarlet-dark); }
+.btn-ghost { border-color: rgba(255, 255, 255, 0.45); color: var(--on-night); }
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.08); }
+.btn-line { border-color: var(--ink-3); color: var(--ink); background: var(--paper); }
+.btn-line:hover { background: var(--mist); }
+
+.top { background: var(--night); color: var(--on-night); border-bottom: 1px solid var(--night-line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 21px; font-weight: 500; text-decoration: none; color: inherit; }
+.brand img { display: block; }
+.nav { display: flex; gap: 6px 22px; font-size: 14px; color: var(--on-night-2); flex-wrap: wrap; }
+@media (max-width: 480px) { .nav { column-gap: 16px; } }
+.nav a { text-decoration: none; }
+.nav a:hover, .nav a[aria-current] { color: #fff; }
+
+.hero { background: var(--night); color: var(--on-night); padding-block: 40px 18px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px; align-items: center; }
+.hero .eyebrow { color: var(--on-night-2); margin-bottom: 14px; }
+.hero h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.04; color: #fff; margin-bottom: 18px; }
+.lede { font-size: 17px; color: #c9d1dd; max-width: 34em; margin-bottom: 18px; }
+.now { font-size: 16px; color: var(--glow); min-height: 52px; margin-bottom: 22px; max-width: 32em; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.dial-box svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--on-night-2); padding-top: 14px; border-top: 1px solid var(--night-line); margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.dial-note { font-size: 12.5px; color: var(--on-night-2); margin-top: 8px; }
+
+.stats { background: var(--night-2); color: #fff; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { padding-block: 18px; border-left: 1px solid var(--night-line); padding-left: 18px; }
+.stat:first-child { border-left: 0; padding-left: 0; }
+.stat b { display: block; font-family: var(--serif); font-weight: 500; font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--on-night-2); }
+
+.ask { padding-block: 44px 8px; }
+.ask-row { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 32px; align-items: start; }
+.ask h2 { font-size: 30px; }
+.ask .sub { color: var(--ink-2); margin-top: 8px; font-size: 15px; }
+.askform { display: flex; gap: 0; border: 1px solid var(--ink-3); border-radius: 4px; overflow: hidden; background: #fff; }
+.askform input { flex: 1; min-width: 0; border: 0; padding: 14px 16px; font: 400 16px var(--sans); color: var(--ink); background: transparent; }
+.askform input::placeholder { color: var(--ink-3); }
+.askform button { border: 0; border-radius: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { font: 400 13px var(--sans); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--mist); color: var(--ink); cursor: pointer; text-decoration: none; }
+.chip:hover { border-color: var(--ink-3); }
+
+.section { padding-block: 48px; }
+.section-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.section-head h2 { font-size: 34px; }
+.section-head .more { font-size: 14px; color: var(--scarlet); text-decoration: none; font-weight: 500; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.card { border-top: 3px solid var(--scarlet); padding-top: 14px; min-width: 0; }
+.card .eyebrow { color: var(--scarlet); }
+.card h3 { font-size: 22px; line-height: 1.2; margin: 6px 0 8px; }
+.card p { font-size: 15px; color: var(--ink-2); }
+.card .meta { font-size: 13px; color: var(--ink-3); margin-top: 10px; }
+.mini { background: var(--mist); border-radius: 4px; padding: 10px 12px 6px; margin-bottom: 12px; }
+.mini svg { width: 100%; display: block; }
+
+.year { background: var(--mist); }
+.year .eyebrow { color: var(--scarlet); }
+.year h2 { font-size: 38px; margin-top: 6px; }
+.year .lead { color: var(--ink-2); max-width: 44em; margin-top: 8px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+.toggles .chip { display: inline-flex; align-items: center; gap: 6px; background: #fff; }
+.toggles .chip[aria-pressed="false"] { opacity: 0.45; }
+.chart-wrap { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 10px 8px 4px; }
+.chart-wrap svg { width: 100%; display: block; }
+.readout { font-size: 14px; color: var(--ink); margin-top: 10px; min-height: 22px; font-variant-numeric: tabular-nums; }
+
+.explore { background: var(--night); color: var(--on-night); }
+.explore .section-head h2 { color: #fff; }
+.explore .section-head p { color: var(--on-night-2); max-width: 36em; margin-top: 8px; }
+.explore-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 32px; align-items: start; }
+.waffle { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; max-width: 440px; margin: 0 auto; }
+.waffle span { aspect-ratio: 1; border-radius: 3px; transition: opacity 0.2s ease; }
+.wlegend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; max-width: 520px; margin: 20px auto 0; }
+.wlegend button { display: flex; align-items: center; gap: 8px; background: none; border: 0; color: var(--on-night); font: 400 14px var(--sans); text-align: left; padding: 5px 8px; border-radius: 4px; cursor: pointer; min-width: 0; }
+.wlegend button:hover, .wlegend button[aria-pressed="true"] { background: rgba(255, 255, 255, 0.08); }
+.wlegend i { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+.wlegend span { min-width: 0; }
+.wlegend b { margin-left: auto; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+.infop { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--night-line); border-radius: 10px; padding: 24px 26px; min-width: 0; }
+.info-k { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--on-night-2); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.info-k i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.info-h { font-size: 30px; color: #fff; line-height: 1.15; margin-bottom: 12px; }
+.info-p { color: #c9d1dd; font-size: 15.5px; margin-bottom: 14px; }
+.info-p + .btn, .info-list + .btn { margin-top: 6px; }
+.info-big { color: var(--on-night-2); font-size: 15px; margin-bottom: 18px; display: flex; align-items: baseline; gap: 10px; }
+.info-big b { font-family: var(--serif); font-size: 46px; line-height: 1; color: var(--glow); font-weight: 500; }
+.info-list { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.info-list li { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 48px; gap: 12px; align-items: center; font-size: 14px; color: var(--on-night); }
+.info-list .tr { height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; }
+.info-list .tr span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+.info-list .pc { text-align: right; font-variant-numeric: tabular-nums; color: #fff; }
+
+.report { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 32px; padding-block: 26px; border-top: 1px solid var(--rule); }
+.report:first-of-type { border-top: 0; padding-top: 0; }
+.report .eyebrow { color: var(--scarlet); }
+.report h3 { font-size: 26px; line-height: 1.2; margin: 8px 0 10px; }
+.report .when { font-size: 14px; color: var(--ink-3); margin-bottom: 16px; }
+.report ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.report li { color: var(--ink); }
+.takeaways-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); margin-bottom: 10px; }
+
+.partners { padding-block: 8px 48px; }
+.partner-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.partner { background: var(--mist); padding: 22px 18px; text-align: center; font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--scarlet); }
+a.partner { display: flex; flex-direction: column; justify-content: center; gap: 4px; text-decoration: none; transition: background 0.2s ease; }
+a.partner:hover { background: #eaeaea; }
+
+footer { background: var(--night); color: var(--on-night-2); padding-block: 36px; font-size: 14px; }
+.foot { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+.foot h4 { font: 600 12px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-night); margin: 0 0 10px; }
+.foot .brand { color: #fff; margin-bottom: 10px; }
+.foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.foot a { text-decoration: none; }
+.foot a:hover { color: #fff; }
+.note { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--night-line); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .hero-grid, .ask-row, .explore-grid, .report, .foot { grid-template-columns: minmax(0, 1fr); }
+  .partner-grid { grid-template-columns: minmax(0, 1fr); }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+}
+@media (max-width: 580px) {
+  .cards { grid-template-columns: minmax(0, 1fr); }
+  .year h2 { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="State of the Prompt, home">
+      <img src="assets/logo.svg" width="30" height="30" alt="">
+      State of the Prompt
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#insights">Insights</a><a href="reports/">Reports</a><a href="explore/">Explore</a><a href="ask/">Ask</a><a href="trends/">Trends</a><a href="about/">About</a><a href="about/#team">Team</a><a href="about/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Rutgers University · School of Communication and Information</p>
+      <h1>A year of what people ask AI</h1>
+      <p class="lede">An opt-in panel of 73,852 people in the United States shared their ChatGPT conversations with researchers for twelve months. We study what they asked, who asked it, and when.</p>
+      <p class="now" id="now" aria-live="polite"></p>
+      <div class="cta">
+        <a class="btn btn-red" href="#explore">Explore the data</a>
+        <a class="btn btn-ghost" href="#reports">Read the reports</a>
+      </div>
+    </div>
+    <div class="dial-box">
+      <svg id="dial" viewBox="8 8 384 384" role="img" aria-label="24-hour dial: the share of the day's conversations at each hour, colored by subject group. Select an hour to see it."></svg>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="legend" id="legend"></div>
+    <p class="dial-note">Each wedge is one hour of the day, in the panelist’s local time; its length is that hour’s share of the day’s conversations.</p>
+  </div>
+</section>
+
+<section class="stats" aria-label="The study in numbers">
+  <div class="wrap stat-grid">
+    <div class="stat"><b id="st-people">65,689</b><span>adults in these figures</span></div>
+    <div class="stat"><b id="st-conv">3.4 million</b><span>conversations analyzed</span></div>
+    <div class="stat"><b>12 months</b><span>July 2025 to June 2026</span></div>
+    <div class="stat"><b>28</b><span>subjects of conversation</span></div>
+  </div>
+</section>
+
+<section class="ask" aria-labelledby="ask-h">
+  <div class="wrap ask-row">
+    <div>
+      <h2 id="ask-h">Ask the data</h2>
+      <p class="sub">Type a question in plain words. The answer is written in your browser from published totals, and no conversation is ever shown.</p>
+    </div>
+    <div>
+      <form class="askform" action="ask/" method="get" role="search">
+        <label for="q" style="position:absolute;left:-9999px;">Your question</label>
+        <input id="q" name="q" type="text" placeholder="When do people ask about recipes?" autocomplete="off">
+        <button class="btn btn-red" type="submit">Ask</button>
+      </form>
+      <div class="chips">
+        <a class="chip" href="ask/?q=Do%20older%20people%20ask%20more%20about%20health%3F">Do older people ask more about health?</a>
+        <a class="chip" href="ask/?q=What%20do%20students%20ask%20at%20night%3F">What do students ask at night?</a>
+        <a class="chip" href="ask/?q=How%20do%20people%20use%20ChatGPT%20for%20work%3F">How do people use ChatGPT for work?</a>
+        <a class="chip" href="ask/?q=Who%20asks%20about%20money%20the%20most%3F">Who asks about money the most?</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="insights" aria-labelledby="ins-h">
+  <div class="wrap">
+    <div class="section-head"><h2 id="ins-h">Latest insights</h2></div>
+    <div class="cards">
+      <article class="card">
+        <div class="mini"><svg id="mini-top" viewBox="0 0 320 130" role="img" aria-label="The five most common subjects and their share of conversations"></svg></div>
+        <p class="eyebrow">Subjects</p>
+        <h3>Health is the biggest subject</h3>
+        <p>One conversation in ten is mainly about health and medicine, ahead of work and of making images.</p>
+        <p class="meta">October 2026 · Project team</p>
+      </article>
+      <article class="card">
+        <div class="mini"><svg id="mini-school" viewBox="0 0 320 130" role="img" aria-label="Weekly share of school questions across the year, against the yearly average"></svg></div>
+        <p class="eyebrow">Education</p>
+        <h3>School questions follow the school calendar</h3>
+        <p>Questions about schoolwork climb in late August, dip at Thanksgiving, fall by half over winter break, and fade again in the summer.</p>
+        <p class="meta">October 2026 · Project team</p>
+      </article>
+      <article class="card">
+        <div class="mini"><svg id="mini-hours" viewBox="0 0 320 130" role="img" aria-label="Share of conversations about work and about health at each hour of the day"></svg></div>
+        <p class="eyebrow">Time of day</p>
+        <h3>Work fills the morning; health comes before dawn</h3>
+        <p>Work questions peak in the middle of the morning, at about one conversation in nine. Health peaks around 5 and 6 am, at about one in eight.</p>
+        <p class="meta">October 2026 · Project team</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section year" id="year" aria-labelledby="yr-h">
+  <div class="wrap">
+    <p class="eyebrow">Over the year</p>
+    <h2 id="yr-h">The year, in questions</h2>
+    <p class="lead">Each line is a subject’s weekly share of conversations against its own yearly average. School follows the school calendar, sports follow the big games, and politics follows the news.</p>
+    <div class="toggles" id="toggles" role="group" aria-label="Show or hide lines"></div>
+    <div class="chart-wrap"><svg id="yrchart" viewBox="0 0 1000 360" role="img" aria-label="Weekly share of school, politics and sports conversations relative to their yearly averages, July 2025 to June 2026"></svg></div>
+    <p class="readout" id="yrread" aria-live="polite"></p>
+  </div>
+</section>
+
+<section class="section explore" id="explore" aria-labelledby="ex-h">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2 id="ex-h">Explore the data</h2><p>Each square is one in every hundred conversations, colored by the family of its main subject.</p></div>
+    </div>
+    <div class="explore-grid">
+      <div>
+        <div class="waffle" id="waffle" role="img" aria-label="100 squares, each one percent of conversations, colored by subject family"></div>
+        <div class="wlegend" id="wlegend" role="group" aria-label="Subject families"></div>
+      </div>
+      <aside class="infop" aria-live="polite">
+        <div id="info-default">
+          <p class="info-k">About these numbers</p>
+          <h3 class="info-h">What people bring to ChatGPT</h3>
+          <p class="info-p" id="info-intro">A language model read the person’s side of each conversation and named its main subject from a list of 28. The squares group those subjects into seven families, plus one for conversations whose subject was unclear or not on the list.</p>
+          <p class="info-p">Choose a family to see what it holds, or compare groups of people in the dashboard.</p>
+          <a class="btn btn-red" href="explore/">Open the dashboard</a>
+        </div>
+        <div id="info-sel" hidden>
+          <p class="info-k"><i id="info-sw"></i>Subject family</p>
+          <h3 class="info-h" id="info-name"></h3>
+          <p class="info-big"><b id="info-n"></b>in every 100 conversations</p>
+          <ul class="info-list" id="info-list"></ul>
+          <a class="btn btn-red" href="explore/">Compare groups in the dashboard</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="reports" aria-labelledby="rep-h">
+  <div class="wrap">
+    <div class="section-head"><h2 id="rep-h">Reports</h2><a class="more" href="reports/">All reports</a></div>
+    <article class="report">
+      <div>
+        <p class="eyebrow">Report 1</p>
+        <h3>What Americans ask ChatGPT about health</h3>
+        <p class="when">October 2026</p>
+        <a class="btn btn-line" href="reports/health/">Read the report</a>
+      </div>
+      <div>
+        <p class="takeaways-label">Key takeaways</p>
+        <ul>
+          <li>One conversation in ten is mainly about health and medicine (10.2%), the largest of 28 subjects.</li>
+          <li>Nearly half of the people in the study (49%) had at least one conversation that touched on health.</li>
+          <li>Four in five health conversations ask a question (80%); few ask ChatGPT to write or produce something (6%).</li>
+        </ul>
+      </div>
+    </article>
+    <article class="report">
+      <div>
+        <p class="eyebrow">Report 2</p>
+        <h3>Politics on ChatGPT</h3>
+        <p class="when">October 2026</p>
+        <a class="btn btn-line" href="reports/politics/">Read the report</a>
+      </div>
+      <div>
+        <p class="takeaways-label">Key takeaways</p>
+        <ul>
+          <li>About one conversation in thirteen involves politics, government or law (7.8%).</li>
+          <li>Personal matters outnumber public debate: 53% of political conversations concern the person’s own taxes, benefits, papers or legal situation, against 43% about society at large.</li>
+          <li>Nearly half of the people in the study (47%) had at least one political conversation.</li>
+        </ul>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="partners" aria-label="Partners">
+  <div class="wrap partner-grid">
+    <a class="partner" href="https://csslab.rutgers.edu/">Rutgers Computational Social Science Lab</a>
+    <a class="partner" href="https://naiom.net/">National AI Opinion Monitor</a>
+    <a class="partner" href="https://comminfo.rutgers.edu/">Rutgers School of<br>Communication &amp; Information</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <div class="brand"><img src="assets/logo.svg" width="26" height="26" alt="">State of the Prompt</div>
+        <p>A Rutgers University study of how people use AI in everyday life, based on a year of ChatGPT conversations shared by a research panel.</p>
+      </div>
+      <div>
+        <h4>The project</h4>
+        <ul><li><a href="about/">About and team</a></li><li><a href="reports/">Reports</a></li><li><a href="explore/">Dashboard</a></li><li><a href="ask/">Ask the data</a></li></ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p>School of Communication and Information<br>Rutgers University, New Brunswick, NJ</p>
+        <p style="margin-top:8px;"><a href="about/#contact">Send us a message</a></p>
+      </div>
+    </div>
+    <p class="note">Every figure on this site is an aggregate of conversations by adults (18 and over). No conversation is shown or quoted.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (parent, tag, attrs, txt) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (txt != null) e.textContent = txt; parent.appendChild(e); return e; };
+  const hourLabel = h => h === 0 ? 'midnight' : h === 12 ? 'noon' : (h % 12) + (h < 12 ? ' am' : ' pm');
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const FONT = 'Public Sans, Arial, sans-serif';
+  const COLOR = { 'Health and body': '#2B9B81', 'Work, money and tech': '#FE9B00', 'School and learning': '#92C051',
+    'Images, games and media': '#F4C40F', 'Relationships and inner life': '#E87B89', 'Home and daily life': '#D8443C',
+    'Politics and law': '#AA7AA1', 'Other or unclear': '#676767' };
+  const getJSON = f => fetch('data/' + f).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.json(); });
+  const SUBJ_LABEL = {};
+
+  Promise.all([getJSON('site.json'), getJSON('hours.json'), getJSON('weekly.json')]).then(([site, hrs, wk]) => {
+    const fams = site.families.map(f => ({ name: f.name, codes: [].concat(f.codes) }));
+    const subj = {}; site.subjects.forEach(s => { subj[s.code] = s; });
+    document.getElementById('st-people').textContent = site.population.people.toLocaleString('en-US');
+    document.getElementById('st-conv').textContent = (site.population.conversations / 1e6).toFixed(1) + ' million';
+    site.subjects.forEach(s => { SUBJ_LABEL[s.code] = s.label; });
+    dial(hrs.hours, fams);
+    minis(site, hrs.hours, wk.weeks);
+    year(wk);
+    waffle(site, fams);
+  }).catch(err => {
+    document.getElementById('now').textContent = 'The figures could not be loaded. Reload the page to try again.';
+    console.error(err);
+  });
+
+  /* hero dial: one wedge per hour, length = the hour's share of the day's conversations, bands = subject families */
+  function dial(H, fams) {
+    const svg = document.getElementById('dial'), cx = 200, cy = 200, r0 = 80, span = 108;
+    const maxV = Math.max(...H.map(r => r.share));
+    const pt = (r, a) => (cx + r * Math.sin(a)).toFixed(2) + ',' + (cy - r * Math.cos(a)).toFixed(2);
+    const arc = (ri, ro, a0, a1) => 'M' + pt(ro, a0) + 'A' + ro + ',' + ro + ' 0 0 1 ' + pt(ro, a1) + 'L' + pt(ri, a1) + 'A' + ri + ',' + ri + ' 0 0 0 ' + pt(ri, a0) + 'Z';
+    mk(svg, 'circle', { cx, cy, r: r0 - 6, fill: 'none', stroke: 'rgba(255,255,255,0.12)' });
+    // the daily average of each subject, weighting hours by their volume
+    const codes = Object.keys(H[0].s);
+    const avg = {}; codes.forEach(k => { avg[k] = H.reduce((t, r) => t + r.share / 100 * r.s[k], 0); });
+    const SKIP = new Set(['unclear', 'other', 'sex_sexuality']);
+    const wedges = [];
+    H.forEach(r => {
+      const h = r.h, a0 = (h * 15 + 0.9) * Math.PI / 180, a1 = ((h + 1) * 15 - 0.9) * Math.PI / 180, len = span * r.share / maxV;
+      const tot = codes.reduce((t, k) => t + r.s[k], 0);
+      let rr = r0;
+      const g = mk(svg, 'g', { tabindex: 0, role: 'button', 'aria-label': hourLabel(h) + ': ' + r.share.toFixed(1) + '% of the day’s conversations' });
+      g.style.cursor = 'pointer';
+      fams.forEach(f => { const sh = f.codes.reduce((t, k) => t + r.s[k], 0), d = len * sh / tot; mk(g, 'path', { d: arc(rr, rr + d, a0, a1), fill: COLOR[f.name] }); rr += d; });
+      mk(g, 'path', { d: arc(r0 - 4, r0 + span + 6, a0, a1), fill: 'transparent' });
+      ['mouseenter', 'click', 'focus'].forEach(ev => g.addEventListener(ev, () => sel(h)));
+      wedges.push(g);
+    });
+    const c1 = mk(svg, 'text', { x: cx, y: cy - 14, 'text-anchor': 'middle', 'font-size': 28, fill: '#ffffff', 'font-family': 'Newsreader, Georgia, serif' });
+    const c2 = mk(svg, 'text', { x: cx, y: cy + 14, 'text-anchor': 'middle', 'font-size': 21, 'font-weight': 600, fill: '#ffcf86', 'font-family': FONT });
+    mk(svg, 'text', { x: cx, y: cy + 32, 'text-anchor': 'middle', 'font-size': 11, fill: '#aab4c4', 'font-family': FONT }, 'of the day’s');
+    mk(svg, 'text', { x: cx, y: cy + 45, 'text-anchor': 'middle', 'font-size': 11, fill: '#aab4c4', 'font-family': FONT }, 'conversations');
+    const now = document.getElementById('now');
+    function sel(h) {
+      const r = H.find(x => x.h === h);
+      wedges.forEach((w, i) => { w.style.opacity = i === h ? 1 : 0.42; });
+      let best = null, bv = 0;
+      codes.forEach(k => { if (SKIP.has(k) || avg[k] < 1) return; const q = r.s[k] / avg[k]; if (q > bv) { bv = q; best = k; } });
+      c1.textContent = hourLabel(h); c2.textContent = r.share.toFixed(1) + '%';
+      now.textContent = 'At ' + hourLabel(h) + ', ' + SUBJ_LABEL[best] + ' comes up ' + bv.toFixed(1) + ' times as often as across the whole day.';
+    }
+    sel(new Date().getHours());
+    const lg = document.getElementById('legend');
+    fams.forEach(f => { lg.insertAdjacentHTML('beforeend', '<span><i class="sw" style="background:' + COLOR[f.name] + '"></i>' + f.name + '</span>'); });
+  }
+  /* the three insight cards */
+  function minis(site, H, W) {
+    // top five subjects
+    (function () {
+      const svg = document.getElementById('mini-top');
+      const SHORT = { health_medicine: 'Health and medicine', work_career_business: 'Work, career, business', art_design_images: 'Art, design, images',
+        entertainment_games: 'Entertainment, games', money_shopping_finance: 'Money and finance', relationships_family: 'Relationships, family',
+        food_drink: 'Food and drink', technology_devices: 'Technology, devices' };
+      const top = site.subjects.filter(s => s.code !== 'unclear' && s.code !== 'other').sort((a, b) => b.share - a.share).slice(0, 5);
+      const max = Math.ceil(top[0].share);
+      mk(svg, 'text', { x: 0, y: 12, 'font-size': 11, fill: '#595959', 'font-family': FONT }, 'Share of conversations, main subject');
+      top.forEach((s, i) => {
+        const y = 22 + i * 21, w = s.share / max * 140;
+        mk(svg, 'text', { x: 130, y: y + 12, 'text-anchor': 'end', 'font-size': 11.5, fill: '#13233a', 'font-family': FONT }, SHORT[s.code] || cap(s.label));
+        mk(svg, 'rect', { x: 136, y: y + 2, width: w.toFixed(1), height: 13, rx: 2, fill: i === 0 ? '#b00b33' : '#cfcfcf' });
+        mk(svg, 'text', { x: 136 + w + 5, y: y + 12, 'font-size': 11.5, fill: '#13233a', 'font-family': FONT }, s.share.toFixed(1) + '%');
+      });
+    })();
+    // school questions by week
+    (function () {
+      const svg = document.getElementById('mini-school');
+      const s = schoolIndex(W), n = s.length, Wd = 320, L = 4, Rr = 4, T = 22, B = 18, lo = 0.25, hi = 1.55;
+      const x = i => L + i * (Wd - L - Rr) / (n - 1), y = v => T + (hi - v) / (hi - lo) * (130 - T - B);
+      mk(svg, 'text', { x: 0, y: 12, 'font-size': 11, fill: '#595959', 'font-family': FONT }, 'School questions by week, against the yearly average');
+      mk(svg, 'line', { x1: L, x2: Wd - Rr, y1: y(1), y2: y(1), stroke: '#cfcfcf', 'stroke-dasharray': '2 3' });
+      const d = s.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join('');
+      mk(svg, 'path', { d: d + 'L' + x(n - 1) + ',' + y(lo) + 'L' + x(0) + ',' + y(lo) + 'Z', fill: 'rgba(176,11,51,0.10)' });
+      mk(svg, 'path', { d, fill: 'none', stroke: '#b00b33', 'stroke-width': 2, 'stroke-linejoin': 'round' });
+      monthTicks(W).filter(t => ['Jul', 'Oct', 'Jan', 'Apr', 'Jun'].includes(t.m)).forEach(t => mk(svg, 'text', { x: x(t.w), y: 127, 'font-size': 10.5, fill: '#7d7d7d', 'text-anchor': t.w < 1 ? 'start' : 'middle', 'font-family': FONT }, t.m));
+    })();
+    // work and health by hour
+    (function () {
+      const svg = document.getElementById('mini-hours'), Wd = 320, L = 4, Rr = 48, T = 22, B = 18, lo = 5, hi = 13;
+      const x = h => L + h * (Wd - L - Rr) / 23, y = v => T + (hi - v) / (hi - lo) * (130 - T - B);
+      mk(svg, 'text', { x: 0, y: 12, 'font-size': 11, fill: '#595959', 'font-family': FONT }, 'Share of conversations at each hour of the day');
+      [['health_medicine', 'Health', '#b00b33'], ['work_career_business', 'Work', '#0e77a4']].forEach(([k, n, c]) => {
+        mk(svg, 'path', { d: H.map((r, h) => (h ? 'L' : 'M') + x(h).toFixed(1) + ',' + y(r.s[k]).toFixed(1)).join(''), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round' });
+        mk(svg, 'text', { x: x(23) + 6, y: y(H[23].s[k]) + 4, 'font-size': 11.5, fill: c, 'font-weight': 600, 'font-family': FONT }, n);
+      });
+      [[0, '12 am'], [6, '6 am'], [12, 'noon'], [18, '6 pm']].forEach(([h, t]) => mk(svg, 'text', { x: x(h), y: 127, 'font-size': 10.5, fill: '#7d7d7d', 'text-anchor': h === 0 ? 'start' : 'middle', 'font-family': FONT }, t));
+    })();
+  }
+
+  const SCHOOL = ['education_schools', 'math', 'science_nature', 'history_society_culture'];
+  const idx = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return a.map(v => v / m); };
+  const schoolIndex = W => idx(W.map(w => SCHOOL.reduce((t, k) => t + w.s[k], 0)));
+  const startOf = w => { const p = w.start.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
+  function monthTicks(W) {    // first week starting in each month
+    const out = [], seen = new Set(), names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const d0 = startOf(W[0]);
+    for (let k = 0; k < 12; k++) {
+      const d = new Date(d0.getFullYear(), d0.getMonth() + k, 1);
+      out.push({ m: names[d.getMonth()], w: (d - d0) / 6048e5 });
+    }
+    return out;
+  }
+
+  /* the year chart */
+  function year(wk) {
+    const W = wk.weeks, n = W.length;
+    const SER = [
+      { n: 'School', c: '#b00b33', s: schoolIndex(W) },
+      { n: 'Politics', c: '#0e77a4', s: idx(W.map(w => w.s.politics_government_law)) },
+      { n: 'Sports', c: '#858585', s: idx(W.map(w => w.s.sports)) }
+    ];
+    const svg = document.getElementById('yrchart'), Wd = 1000, H = 360, L = 52, Rr = 86, T = 46, B = 40, lo = 0.25, hi = 1.75;
+    const x = i => L + i * (Wd - L - Rr) / (n - 1), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+    [0.5, 1, 1.5].forEach(v => { mk(svg, 'line', { x1: L, x2: Wd - Rr, y1: y(v), y2: y(v), stroke: v === 1 ? '#a4a4a4' : '#e8e8e8', 'stroke-width': 1 }); mk(svg, 'text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#7d7d7d', 'font-family': FONT }, v === 1 ? 'usual' : v + '×'); });
+    monthTicks(W).forEach(t => mk(svg, 'text', { x: x(t.w), y: H - 14, 'font-size': 12, fill: '#7d7d7d', 'font-family': FONT }, t.m));
+    const groups = SER.map(s => { const g = mk(svg, 'g', {}); mk(g, 'path', { d: s.s.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(''), fill: 'none', stroke: s.c, 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }); mk(g, 'text', { x: Wd - Rr + 8, y: y(s.s[n - 1]) + 4, 'font-size': 13, fill: s.c === '#858585' ? '#5f5f5f' : s.c, 'font-weight': 600, 'font-family': FONT }, s.n); return g; });
+    // notes: week index, text, series, row
+    const notes = [[8, 'Back to school', 0, 0], [13, 'Government shutdown', 1, 1], [21, 'Thanksgiving', 0, 0], [25, 'Winter break', 0, 1], [31, 'Super Bowl', 2, 1], [49, 'World Cup', 2, 0]];
+    notes.forEach(([i, t, k, row]) => { const v = SER[k].s[i], yy = T - 22 + row * 16, g = groups[k]; mk(g, 'line', { x1: x(i), x2: x(i), y1: y(v) - 6, y2: yy + 4, stroke: '#bfbfbf', 'stroke-width': 1 }); mk(g, 'text', { x: x(i), y: yy, 'text-anchor': 'middle', 'font-size': 12, fill: '#595959', 'font-family': FONT }, t); });
+    const cross = mk(svg, 'line', { x1: 0, x2: 0, y1: T, y2: H - B, stroke: '#13233a', 'stroke-width': 1, opacity: 0 });
+    const rd = document.getElementById('yrread');
+    const on = SER.map(() => true);
+    let cur = 31;
+    function show(i) {
+      cur = i; cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', 0.35);
+      const parts = SER.filter((s, k) => on[k]).map(s => s.n.toLowerCase() + ' ' + s.s[i].toFixed(1) + '×');
+      rd.textContent = 'Week of ' + startOf(W[i]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ': ' + (parts.length ? parts.join(' · ') + ' its usual share' : 'pick a line above');
+    }
+    const hit = mk(svg, 'rect', { x: L, y: T, width: Wd - L - Rr, height: H - T - B, fill: 'transparent' });
+    hit.addEventListener('mousemove', e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * Wd / r.width; show(Math.max(0, Math.min(n - 1, Math.round((px - L) / ((Wd - L - Rr) / (n - 1)))))); });
+    const tg = document.getElementById('toggles');
+    SER.forEach((s, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'true'); b.innerHTML = '<i class="sw" style="background:' + s.c + '"></i>' + s.n; b.addEventListener('click', () => { on[k] = !on[k]; b.setAttribute('aria-pressed', on[k]); groups[k].style.display = on[k] ? '' : 'none'; show(cur); }); tg.appendChild(b); });
+    show(cur);
+  }
+
+  /* the subject waffle: each square is 1% of conversations */
+  function waffle(site, fams) {
+    const S = fams.map(f => [f.name, COLOR[f.name], f.codes.map(k => { const s = site.subjects.find(x => x.code === k); return [s.label, s.share]; })]);
+    const tot = g => g[2].reduce((a, s) => a + s[1], 0);
+    const all = S.reduce((a, g) => a + tot(g), 0);
+    const exact = S.map(g => tot(g) / all * 100);    // shares of conversations with a coded subject
+    const fl = exact.map(Math.floor); const left = 100 - fl.reduce((a, b) => a + b, 0);
+    exact.map((v, i) => [i, v - fl[i]]).sort((a, b) => b[1] - a[1]).slice(0, left).forEach(([i]) => fl[i]++);
+    const w = document.getElementById('waffle'), lg = document.getElementById('wlegend');
+    const pDef = document.getElementById('info-default'), pSel = document.getElementById('info-sel'), pName = document.getElementById('info-name'), pN = document.getElementById('info-n'), pSw = document.getElementById('info-sw'), pList = document.getElementById('info-list');
+    const cells = [];
+    S.forEach((g, i) => { for (let j = 0; j < fl[i]; j++) { const c = document.createElement('span'); c.style.background = g[1]; c.dataset.g = i; w.appendChild(c); cells.push(c); } });
+    const btns = S.map((g, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i style="background:' + g[1] + '"></i><span>' + g[0] + '</span><b>' + fl[i] + '</b>'; lg.appendChild(b); return b; });
+    let pinned = -1;
+    const paint = i => {
+      cells.forEach(c => { c.style.opacity = (i < 0 || +c.dataset.g === i) ? 1 : 0.22; });
+      btns.forEach((b, k) => b.setAttribute('aria-pressed', k === i));
+      if (i < 0) { pSel.hidden = true; pDef.hidden = false; return; }
+      const g = S[i]; pDef.hidden = true; pSel.hidden = false; pName.textContent = g[0]; pN.textContent = fl[i]; pSw.style.background = g[1];
+      pList.innerHTML = g[2].slice().sort((a, b) => b[1] - a[1]).map(s => '<li><span>' + cap(s[0]) + '</span><span class="tr"><span style="width:' + (s[1] / 11 * 100).toFixed(1) + '%;background:' + g[1] + '"></span></span><span class="pc">' + s[1].toFixed(1) + '%</span></li>').join('');
+    };
+    const pick = i => { pinned = (pinned === i) ? -1 : i; paint(pinned); };
+    btns.forEach((b, i) => { b.addEventListener('mouseenter', () => paint(i)); b.addEventListener('focus', () => paint(i)); b.addEventListener('click', () => pick(i)); });
+    cells.forEach(c => { c.addEventListener('mouseenter', () => paint(+c.dataset.g)); c.addEventListener('click', () => pick(+c.dataset.g)); });
+    const back = () => paint(pinned);
+    w.addEventListener('mouseleave', back); lg.addEventListener('mouseleave', back);
+  }
+})();
+</script>
+</body>
+</html>
