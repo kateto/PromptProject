@@ -295,23 +295,23 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
 <section class="section explore" id="explore" aria-labelledby="ex-h">
   <div class="wrap">
     <div class="section-head">
-      <div><h2 id="ex-h">Explore the data</h2><p>Each square is one in every hundred conversations, colored by the family of its main subject.</p></div>
+      <div><h2 id="ex-h">Explore the data</h2><p>Each square is one in every hundred conversations, colored by the category of its main subject.</p></div>
     </div>
     <div class="explore-grid">
       <div>
-        <div class="waffle" id="waffle" role="img" aria-label="100 squares, each one percent of conversations, colored by subject family"></div>
-        <div class="wlegend" id="wlegend" role="group" aria-label="Subject families"></div>
+        <div class="waffle" id="waffle" role="img" aria-label="100 squares, each one percent of conversations, colored by subject category"></div>
+        <div class="wlegend" id="wlegend" role="group" aria-label="Subject categories"></div>
       </div>
       <aside class="infop" aria-live="polite">
         <div id="info-default">
           <p class="info-k">About these numbers</p>
           <h3 class="info-h">What people bring to ChatGPT</h3>
-          <p class="info-p" id="info-intro">A language model read the person’s side of each conversation and named its main subject from a list of 28. The squares group those subjects into seven families, plus one for conversations whose subject was unclear or not on the list.</p>
-          <p class="info-p">Choose a family to see what it holds, or compare groups of people in the dashboard.</p>
+          <p class="info-p" id="info-intro">A language model read the person’s side of each conversation and named its main subject from a list of 28. The squares group those subjects into seven categories, plus one for conversations whose subject was unclear or not on the list.</p>
+          <p class="info-p">Choose a category to see what it holds, or compare groups of people in the dashboard.</p>
           <a class="btn btn-red" href="explore/">Open the dashboard</a>
         </div>
         <div id="info-sel" hidden>
-          <p class="info-k"><i id="info-sw"></i>Subject family</p>
+          <p class="info-k"><i id="info-sw"></i>Subject category</p>
           <h3 class="info-h" id="info-name"></h3>
           <p class="info-big"><b id="info-n"></b>in every 100 conversations</p>
           <ul class="info-list" id="info-list"></ul>
