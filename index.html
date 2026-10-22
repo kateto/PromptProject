@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/ask-search.css">
 <style>
 /* Layout: a navy hero built on the 24-hour dial, then white editorial bands; navy returns for Explore and the footer. */
 :root {
@@ -575,6 +576,20 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
     const back = () => paint(pinned);
     w.addEventListener('mouseleave', back); lg.addEventListener('mouseleave', back);
   }
+})();
+</script>
+<script src="assets/ask-search.js"></script>
+<script>
+(function () {
+  'use strict';
+  // the question box: completions while typing, and four questions to try, different on every visit
+  var f = document.querySelector('form.askform');
+  if (!f || !window.PromptSearch) return;
+  var chips = f.parentNode.querySelector('.chips');
+  window.PromptSearch.attach(f, { questions: 'data/questions.json', askBase: 'ask/' });
+  window.PromptSearch.ready('data/questions.json').then(function (p) {
+    if (chips) chips.innerHTML = p.random(4).map(function (q) { return '<a class="chip" href="ask/?q=' + encodeURIComponent(q) + '">' + q.replace(/</g, '&lt;') + '</a>'; }).join('');
+  }).catch(function () {});
 })();
 </script>
 </body>

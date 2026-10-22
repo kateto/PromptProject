@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../assets/report.css">
+<link rel="stylesheet" href="../assets/ask-search.css">
 <style>
 .askhead { background: var(--night); color: var(--on-night); padding-block: 34px 30px; }
 .askhead .kicker { color: var(--glow); }
@@ -19,6 +20,7 @@
 .askform input { flex: 1; min-width: 0; border: 0; padding: 14px 16px; font: 400 17px var(--sans); color: var(--ink); background: transparent; }
 .askform input:focus { outline: none; }
 .askform:focus-within { outline: 2px solid var(--glow); outline-offset: 2px; }
+.askhead .asksearch { max-width: 760px; margin-top: 20px; }
 .askform button { border: 0; border-radius: 0; font: 500 15px var(--sans); padding: 0 22px; background: var(--scarlet); color: #fff; cursor: pointer; }
 .askform button:hover { background: var(--scarlet-dark); }
 
@@ -106,12 +108,14 @@
   </div>
 </footer>
 
+<script src="../assets/ask-search.js"></script>
 <script src="../assets/ask.js"></script>
 <script>
 (function () {
   'use strict';
   const q = new URLSearchParams(location.search).get('q');
   const input = document.getElementById('q'), out = document.getElementById('answer');
+  window.PromptSearch.attach(document.querySelector('form.askform'), { questions: '../data/questions.json', askBase: './' });
   window.PromptAsk.load('../data/').then(() => {
     if (q && q.trim()) {
       input.value = q;
@@ -121,8 +125,11 @@
         if (r.title) document.title = r.title.slice(0, 80) + ' · State of the Prompt';
       });
     } else {
-      out.innerHTML = '<p class="abody">Try one of these, or type your own question above.</p><div class="amore">' +
-        window.PromptAsk.SUGGEST.map(s => '<a href="./?q=' + encodeURIComponent(s[1]) + '">' + s[0] + '</a>').join('') + '</div>';
+      // questions to try: a different eight on every visit, from the checked pool (the fixed list until it loads)
+      out.innerHTML = '<p class="abody">Try one of these, or type your own question above.</p><div class="amore" id="try"></div>';
+      const fill = (qs) => { document.getElementById('try').innerHTML = qs.map(s => '<a href="./?q=' + encodeURIComponent(s) + '">' + s.replace(/</g, '&lt;') + '</a>').join(''); };
+      fill(window.PromptAsk.SUGGEST.map(s => s[1]));
+      window.PromptSearch.ready('../data/questions.json').then(p => fill(p.random(8))).catch(() => {});
     }
   }).catch(() => { out.innerHTML = '<p class="abody">The figures could not be loaded. Reload the page to try again.</p>'; });
 })();

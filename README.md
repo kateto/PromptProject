@@ -45,3 +45,15 @@ For questions about the project, press inquiries, or collaboration, use the cont
 ## About this repository
 
 The site is plain HTML, CSS, and JavaScript served by GitHub Pages, with no build step. The aggregate figures in `data/` are produced by the project's analysis code, which runs on the secure systems that hold the conversations and is not part of this repository.
+
+## The question box
+
+The box on the home page and on Ask the data (`assets/ask-search.js`, `assets/ask-search.css`) offers whole questions while you type, grouped by what the next words could be (people, subjects, times, purposes, mentions), plus questions from a pool that match the typed words; an empty box offers six questions to try, and the placeholder rotates through the pool. Arrow keys move, Enter takes a completion into the box, Enter on a question asks it, Escape closes. Small typos in a typed word still find the phrase.
+
+Everything the box offers comes from `data/questions.json`, built by
+
+```
+node tools/build_questions.mjs
+```
+
+which runs every candidate question through this site's own parser and answer code (`assets/ask.js`, loaded headless) and keeps only those that read as intended and answer from published figures. Rerun it after `data/ask.json` or `assets/ask.js` changes. `node tools/test_search.mjs` checks the completion logic. The parser and the answers are not changed by any of this; the box only helps write a question they read well.
