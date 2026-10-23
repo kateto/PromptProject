@@ -1,0 +1,12 @@
+/* The question box's completions panel (assets/ask-search.js). */
+.asksearch { position: relative; }
+.asksearch .askform { margin-top: 0; }
+.asksearch .sugg { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30; background: var(--paper, #fff); color: var(--ink, #13233a); border: 1px solid var(--rule, #e1e1e1); border-radius: 6px; box-shadow: 0 12px 32px rgba(15, 23, 36, 0.16); max-height: min(62vh, 440px); overflow-y: auto; padding: 4px 0 6px; text-align: left; }
+.asksearch .sugg[hidden] { display: none; }
+.asksearch .sugg h5 { font: 600 11px/1.4 var(--sans, sans-serif); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3, #7d7d7d); margin: 8px 14px 2px; }
+.asksearch .sugg a { display: block; padding: 7px 14px; font: 400 15px/1.4 var(--sans, sans-serif); color: var(--ink, #13233a); text-decoration: none; cursor: pointer; }
+.asksearch .sugg a b { font-weight: 600; color: var(--scarlet, #cc0033); }
+.asksearch .sugg a:hover, .asksearch .sugg a.on { background: var(--mist, #f3f3f3); }
+.asksearch .sugg a:focus { outline: none; }
+.asksearch .sugg .g + .g { border-top: 1px solid var(--rule, #e1e1e1); margin-top: 4px; }
+@media (max-width: 700px) { .asksearch .sugg { max-height: 50vh; } .asksearch .sugg a { padding: 9px 12px; font-size: 14px; } }
