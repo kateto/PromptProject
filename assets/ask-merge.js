@@ -29,7 +29,10 @@
     try { own = R.read(q); } catch (e) { return { question: q, notes: [], by: 'theirs' }; }
     if (A.mentionRoute(T).length) return { question: q, notes: own.notes.filter((n) => /by state/.test(n)), by: 'theirs' };   // a state reads as mentions of its name; say why
     if (own.minors || !own.question) return { question: q, notes: own.minors ? [] : own.notes.filter((n) => KEEP.test(n)), by: 'theirs' };
-    if (!T.minors && slotsOf(T) >= own.slots) return { question: q, notes: own.notes.filter((n) => KEEP.test(n)), by: 'theirs' };
+    // what each reading got out of the question: a slot each, plus one when the question asks who or when and the reading says so
+    const theirScore = slotsOf(T) + (T.intent === 'who' || T.intent === 'when' ? 1 : 0);
+    const ourScore = own.slots + (own.intent ? 1 : 0);
+    if (!T.minors && theirScore >= ourScore) return { question: q, notes: own.notes.filter((n) => KEEP.test(n)), by: 'theirs' };
     return { question: own.question, notes: own.notes, by: 'ours' };
   }
   window.PromptMerge = { ready, route };
