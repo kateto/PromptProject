@@ -1086,6 +1086,6 @@
   // Fetch whatever a question will need, so render() can stay synchronous.
   function prepare(question) { return Promise.all(mentionRoute(parse(question)).map(loadTerm)); }
 
-  window.PromptAsk = { load, prepare, loadTerm, parse, answer, render, SUGGEST, linesSVG, monthFloors, perK, fmtK, oneInK, ppFmt,
+  window.PromptAsk = { load, prepare, loadTerm, parse, answer, render, SUGGEST, mentionRoute, linesSVG, monthFloors, perK, fmtK, oneInK, ppFmt,
     mentions: () => MENT, termDetail: id => MDET[id], months: () => MONTHS, monthName: k => MONTH_NAME[k] };
 })();

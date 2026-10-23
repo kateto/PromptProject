@@ -110,18 +110,23 @@
 
 <script src="../assets/ask-search.js"></script>
 <script src="../assets/ask.js"></script>
+<script src="../assets/ask-reader.js"></script>
+<script src="../assets/ask-merge.js"></script>
 <script>
 (function () {
   'use strict';
   const q = new URLSearchParams(location.search).get('q');
   const input = document.getElementById('q'), out = document.getElementById('answer');
   window.PromptSearch.attach(document.querySelector('form.askform'), { questions: '../data/questions.json', askBase: './' });
-  window.PromptAsk.load('../data/').then(() => {
+  window.PromptAsk.load('../data/').then(() => window.PromptMerge.ready('../data/')).then(() => {
     if (q && q.trim()) {
       input.value = q;
       const qq = q.trim().slice(0, 300);
-      return window.PromptAsk.prepare(qq).then(() => {
-        const r = window.PromptAsk.render(out, qq, './');
+      // merged reading: mentions go to this site's router; otherwise the reader may rewrite the question (see ask-merge.js)
+      const route = window.PromptMerge.route(qq);
+      return window.PromptAsk.prepare(route.question).then(() => {
+        const r = window.PromptAsk.render(out, route.question, './');
+        if (route.notes.length) out.insertAdjacentHTML('afterbegin', '<div class="anote">' + route.notes.map(n => '<div>' + n.replace(/</g, '&lt;') + '</div>').join('') + '</div>');
         if (r.title) document.title = r.title.slice(0, 80) + ' · State of the Prompt';
       });
     } else {
