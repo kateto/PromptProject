@@ -156,14 +156,17 @@
     ['the south|south|southern(ers)?', 'region', 'South'],
     ['west coast|the west|west|western(ers)?', 'region', 'West']
   ];
-  const MINORS = 'teens?|teenagers?|teenage|teenaged|underage|preteens?|pre teens?|tweens?|tweenagers?|adolescents?|minors?|under 18|high schoolers|high school students|middle schoolers|(?<!(with|without|no|have|has|their|my|our) )(kids|children) (ask|use|talk|do|want)|what do (kids|children)';
+  const MINORS = 'teens?|teenagers?|teenage|teenaged|underage|preteens?|pre teens?|tweens?|tweenagers?|adolescents?|minors?|under 18|high schoolers|high school students|middle schoolers|(?<!(with|without|no|have|has|their|my|our) )(kids|children) (ask|use|talk|do|want)|what do (kids|children)' +
+    // ages under 18 written as numbers ("16-year-olds", "aged 15"); hyphens are spaces by now
+    '|(1[0-7] (to |and )?\\d{1,2}|\\d{1,2} (to |and )?1[0-7]|1[0-7]) (years? olds?|yr olds?|years? of age)' +
+    '|(aged?|ages) 1[0-7]|13 (to |and )?17|(younger than|below|under the age of) 18';
   // Parents of children of any age are adults, and are answered as the parent
   // group; read before MINORS so "parents of teenagers" is not refused. Questions
   // about the young people themselves ("teen parents", "teenage moms",
   // "teenagers with parents") do not match and are still refused.
   const PARENTS_OF = '(parents?|moms?|dads?|mothers?|fathers?|people|adults) (of|with|who have|raising) ' +
     '(young |little |small |teenage |school ?age |grown |adult )?' +
-    '(teens?|teenagers?|adolescents?|minors?|preteens?|tweens?|high schoolers|high school students|middle schoolers|kids|children|a child|a kid|a teen|a teenager|toddlers|babies|a baby)( at home)?' +
+    '(teens?|teenagers?|adolescents?|minors?|preteens?|tweens?|high schoolers|high school students|middle schoolers|kids|children|a child|a kid|a teen|a teenager|toddlers|babies|a baby|(an? )?\\d{1,2}( (to |and )?\\d{1,2})? (years? olds?|yr olds?))( at home)?' +
     '|(teens|teenagers|kids|children)( s)? (parents|moms|dads|mothers|fathers)';
 
   // Decades and generations straddle the site's age groups (18-24, 25-34, ...),
@@ -275,7 +278,7 @@
     if (par) {
       out.who.push({ dim: 'children', level: 'Yes, and at least one lives in my home', at: s.at });
       const kid = par.replace(/^(parents?|moms?|dads?|mothers?|fathers?|people|adults) (of|with|who have|raising) /, '');
-      if (/teen|adolescent|minor|tween|school|young|little|small|toddler|bab|grown|adult/.test(kid)) out.notes.push('Figures for parents do not record the children’s ages, so this shows all parents with a child at home.');
+      if (/teen|adolescent|minor|tween|school|young|little|small|toddler|bab|grown|adult|\d/.test(kid)) out.notes.push('Figures for parents do not record the children’s ages, so this shows all parents with a child at home.');
     }
     if (take(s, MINORS)) out.minors = true;
 
