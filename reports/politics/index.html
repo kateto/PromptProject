@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Politics on ChatGPT · State of the Prompt</title>
 <meta name="description" content="Report 2 from State of the Prompt: about one conversation in thirteen involves politics, government or law, and most of it is practical.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Politics on ChatGPT">
+<meta property="og:description" content="Report 2 from State of the Prompt: about one conversation in thirteen involves politics, government or law, and most of it is practical.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,16 +210,19 @@
     const SC = { personal: ['Personal', '#b00b33', '#ffffff'], societal: ['Societal', '#0e77a4', '#ffffff'], mixed: ['Mixed', '#a4a4a4', '#13233a'] };
     R.stack('f-scope', 'f-scope-key', d.scope.map(([k, v]) => [SC[k][0], v, SC[k][1], SC[k][2]]), { labels: true });
     month(d.month);
+    R.onWidth(() => month(d.month));
     R.evenRows();
   }).catch(e => { console.error(e); });
 
   function month(m) {
-    const svg = document.getElementById('f-month'), mk = R.svg(svg), W = 700, H = 250, L = 44, Rr = 70, T = 34, B = 38, lo = 2, hi = 5;
+    const svg = document.getElementById('f-month'), mk = R.svg(svg), W = R.width(svg, 700), H = 250, L = 44, Rr = 70, T = 34, B = 38, lo = 2, hi = 5;
     const x = i => L + i * (W - L - Rr) / 11, y = v => T + (hi - v) / (hi - lo) * (H - T - B), font = 'Public Sans, Arial, sans-serif';
+    const narrow = W < 480;              // on a phone, every other month is labeled and the shutdown band's label is shortened
+    svg.innerHTML = ''; svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     const band = (i0, i1, label) => { mk('rect', { x: x(i0) - 8, y: T, width: x(i1) - x(i0) + 16, height: H - T - B, fill: '#ebebeb' }); mk('text', { x: (x(i0) + x(i1)) / 2, y: T - 10, 'text-anchor': 'middle', 'font-size': 12, fill: '#595959', 'font-family': font }, label); };
-    band(3, 4, 'Government shutdown'); band(6, 9, 'Tax season');
-    [2, 3, 4, 5].forEach(v => { mk('line', { x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#e1e1e1' }); mk('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#7d7d7d', 'font-family': font }, v + '%'); });
-    m.forEach(([k], i) => mk('text', { x: x(i), y: H - 14, 'text-anchor': 'middle', 'font-size': 12, fill: '#7d7d7d', 'font-family': font }, R.MONTH[k.slice(5)]));
+    band(3, 4, narrow ? 'Shutdown' : 'Government shutdown'); band(6, 9, 'Tax season');
+    [2, 3, 4, 5].forEach(v => { mk('line', { x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#e1e1e1' }); mk('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#6b6b6b', 'font-family': font }, v + '%'); });
+    m.forEach(([k], i) => { if (!narrow || i % 2 === 0) mk('text', { x: x(i), y: H - 14, 'text-anchor': 'middle', 'font-size': 12, fill: '#6b6b6b', 'font-family': font }, R.MONTH[k.slice(5)]); });
     mk('text', { x: x(0), y: H - 1, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#a4a4a4', 'font-family': font }, '2025');
     mk('text', { x: x(6), y: H - 1, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#a4a4a4', 'font-family': font }, '2026');
     [[1, '#b00b33', 'Personal'], [2, '#0e77a4', 'Societal']].forEach(([k, c, n]) => {

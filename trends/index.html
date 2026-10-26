@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trends · State of the Prompt</title>
 <meta name="description" content="Compare how often people mention people, places, products and other terms in their ChatGPT conversations, month by month and across groups.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Trends · State of the Prompt">
+<meta property="og:description" content="Compare how often people mention people, places, products and other terms in their ChatGPT conversations, month by month and across groups.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,8 +85,10 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
 @media (max-width: 640px) {
   .grow { grid-template-columns: minmax(0, 96px) minmax(0, 1fr); gap: 8px; }
   .gbar { grid-template-columns: minmax(0, 1fr) 58px; }
-  #chart svg { min-width: 520px; }                  /* keeps the axis text legible; the chart scrolls sideways */
 }
+.tnotes { margin-top: 12px; display: grid; gap: 4px; }
+.tnotes p { font-size: 13px; color: var(--ink-2); }
+.tnotes b { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -213,8 +220,13 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
   }
   function remove(id) { sel = sel.filter(x => x !== id); draw(); }
   function notOnList(text) {
+    if (/suicid|self[\s-]*harm|self[\s-]*injur/i.test(text)) {   // left off the list on purpose; say so plainly
+      notice('<p><b>This site does not report mentions of suicide or self-harm.</b></p>' +
+        '<p>If you are thinking about suicide, or are worried about someone, you can call or text 988 to reach the 988 Suicide and Crisis Lifeline in the US.</p>');
+      return;
+    }
     notice('<p><b>“' + esc(text) + '” is not on our list of terms.</b></p>' +
-      '<p>This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well be mentioned in the conversations; it simply has not been added here yet. Browse <a href="#b-h">our list of terms</a> below, or ask about a broader subject on the <a href="../ask/">Ask page</a>.</p>');
+      '<p>This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well be mentioned in the conversations; it is simply not counted here. Browse <a href="#b-h">our list of terms</a> below, or ask about a broader subject on the <a href="../ask/">Ask page</a>.</p>');
   }
   function notTooRare(t) {
     notice('<p><b>“' + esc(t.name) + '” is on our list, but it is mentioned too rarely to chart month by month.</b></p>' +
@@ -257,9 +269,11 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
       const months = A.months();
       const series = sel.map((id, i) => ({ name: M.byId[id].name, values: months.map(k => ds[i] ? (people ? (ds[i].month_pp || {})[k] : ds[i].month[k]) : null),
         low: months.map(k => !!(ds[i] && (ds[i].month_low || []).includes(k))), held: months.map(k => !!(ds[i] && (ds[i].month_held || []).includes(k))) }));
+      // drawn at the width it is shown at, so the text keeps its size on a phone
+      const width = Math.round(Math.max(280, Math.min(640, document.getElementById('chart').clientWidth || 640)));
       document.getElementById('chart').innerHTML = people
-        ? A.linesSVG(series, { fmt: pc, axis: pcAxis, aria: 'Share of people who mentioned each term, by month', floor: A.monthFloors('people') })
-        : A.linesSVG(series, { floor: A.monthFloors('conv') });
+        ? A.linesSVG(series, { fmt: pc, axis: pcAxis, aria: 'Share of people who mentioned each term, by month', floor: A.monthFloors('people'), width })
+        : A.linesSVG(series, { floor: A.monthFloors('conv'), width });
       let h = '<table class="tt"><thead><tr><th>Term</th><th' + (people ? '' : ' class="on"') + '>Per 1,000 conversations</th><th' + (people ? ' class="on"' : '') +
         '>People who mentioned it</th><th>Conversations per person</th><th>Peak month</th></tr></thead><tbody>';
       sel.forEach((id, i) => {
@@ -268,7 +282,9 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
         h += '<tr><td><i style="background:' + COLORS[i] + '"></i>' + esc(t.name) + '</td><td' + (people ? '' : ' class="on"') + '>' + A.fmtK(t.per1000) +
           '</td><td' + (people ? ' class="on"' : '') + '>' + pc(t.pp) + '</td><td>' + t.cpp.toFixed(1) + '</td><td>' + esc(peak) + '</td></tr>';
       });
-      document.getElementById('table').innerHTML = h + '</tbody></table>';
+      // what a term's count includes or leaves out ("Also counts the fruit.")
+      const tn = sel.map(id => M.byId[id]).filter(t => t.note).map(t => '<p><b>' + esc(t.name) + ':</b> ' + esc(t.note) + '</p>').join('');
+      document.getElementById('table').innerHTML = h + '</tbody></table>' + (tn ? '<div class="tnotes">' + tn + '</div>' : '');
       drawGroups(ds);
       shown = { ids: asked, ds, people };
       document.querySelectorAll('.dlrow').forEach(d => { d.hidden = false; });
@@ -414,6 +430,8 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     if (rare.length) notTooRare(M.byId[rare[0]]);
     browse();
     draw();
+    let w0 = window.innerWidth, tm;        // the chart is drawn to its width, so redraw when that changes
+    window.addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (Math.abs(window.innerWidth - w0) > 30 && sel.length) { w0 = window.innerWidth; draw(); } }, 150); });
   }).catch(() => { document.getElementById('chart').innerHTML = '<p class="empty">The data could not be loaded. Reload the page to try again.</p>'; });
 })();
 </script>

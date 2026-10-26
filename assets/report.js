@@ -26,6 +26,18 @@
     return (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
   };
 
+  /* An SVG chart is drawn at the width it is shown at (between 280 and max),
+     so its text keeps its size on a phone instead of shrinking with the drawing. */
+  R.width = function (svg, max) {
+    const w = svg.getBoundingClientRect().width;
+    return Math.round(Math.max(280, Math.min(max, w || max)));
+  };
+  /* redraw such a chart when the window's width changes by more than a little */
+  R.onWidth = function (fn) {
+    let w0 = window.innerWidth, tm;
+    window.addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (Math.abs(window.innerWidth - w0) > 30) { w0 = window.innerWidth; fn(); } }, 150); });
+  };
+
   /* charts shown side by side share one row height, so their rows line up across the pair */
   R.evenRows = function () {
     document.querySelectorAll('.two').forEach(two => {
@@ -39,9 +51,11 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(R.evenRows);
   let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(R.evenRows, 120); });
 
-  /* the "Cite this report" button */
+  /* the "Cite this report" button; the citation ends with the page's own address,
+     so it is right wherever the site is served (github.io now, a custom domain later) */
   R.cite = function (btnId, noteId, text) {
     const note = document.getElementById(noteId);
+    if (/^https?:$/.test(location.protocol)) text += ' ' + location.origin + location.pathname;
     document.getElementById(btnId).addEventListener('click', () => {
       try { navigator.clipboard.writeText(text).then(() => { note.textContent = 'Citation copied.'; }).catch(() => { note.textContent = text; }); }
       catch (e) { note.textContent = text; }

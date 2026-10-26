@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ask the Data · State of the Prompt</title>
 <meta name="description" content="Ask a question in plain words about what people ask ChatGPT. Answers are written in your browser from published aggregates.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ask the Data · State of the Prompt">
+<meta property="og:description" content="Ask a question in plain words about what people ask ChatGPT. Answers are written in your browser from published aggregates.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,7 +131,9 @@
       const route = window.PromptMerge.route(qq);
       return window.PromptAsk.prepare(route.question).then(() => {
         const r = window.PromptAsk.render(out, route.question, './');
-        if (route.notes.length) out.insertAdjacentHTML('afterbegin', '<div class="anote">' + route.notes.map(n => '<div>' + n.replace(/</g, '&lt;') + '</div>').join('') + '</div>');
+        // the reader's "no figures by state" note says what the answer's own note already says
+        const rn = route.notes.filter(n => !(/by state/.test(n) && r.notes.some(m => /by state/.test(m))));
+        if (rn.length) out.insertAdjacentHTML('afterbegin', '<div class="anote">' + rn.map(n => '<div>' + n.replace(/</g, '&lt;') + '</div>').join('') + '</div>');
         if (r.title) document.title = r.title.slice(0, 80) + ' · State of the Prompt';
       });
     } else {

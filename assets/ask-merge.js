@@ -9,8 +9,9 @@
  * reads strictly more of the question than the site's parser did; otherwise the
  * site's own reading stands. Its notes (what was corrected, converted or left
  * out) are shown above the answer. The answer code and the figures are untouched.
- * A question the site's parser reads as being about minors is never rewritten:
- * it goes to the site's own refusal, with no notes. A reader note about a word
+ * A question the site's parser reads as being about minors, or about suicide or
+ * self-harm, is never rewritten: it goes to the site's own answer, with no
+ * notes. A reader note about a word
  * the site's parser already read, or already explained, is dropped. When the
  * site's parser read every word, the reader takes over only to supply a who- or
  * when-question the site missed.
@@ -46,6 +47,7 @@
     const A = window.PromptAsk, R = window.PromptReader;
     const T = A.parse(q);
     if (T.minors) return { question: q, notes: [], by: 'theirs' };   // a question about minors is always refused, never rewritten
+    if (T.sensitive) return { question: q, notes: [], by: 'theirs' };   // nor is one about suicide or self-harm (never answered as mental health)
     let own;
     try { own = R.read(forReader(q)); } catch (e) { return { question: q, notes: [], by: 'theirs' }; }
     if (A.mentionRoute(T).length) return { question: q, notes: own.notes.filter((n) => /by state/.test(n)), by: 'theirs' };   // a state reads as mentions of its name; say why

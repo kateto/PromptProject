@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Who Asks About What · State of the Prompt</title>
 <meta name="description" content="Compare how often groups of people bring each subject to ChatGPT: by age, gender, income, education, race and ethnicity, and region.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Who Asks About What · State of the Prompt">
+<meta property="og:description" content="Compare how often groups of people bring each subject to ChatGPT: by age, gender, income, education, race and ethnicity, and region.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +24,7 @@
   --glow: #ffcf86;
   --ink: #13233a;
   --ink-2: #595959;
-  --ink-3: #7d7d7d;
+  --ink-3: #6b6b6b;
   --rule: #e1e1e1;
   --paper: #ffffff;
   --mist: #f3f3f3;
@@ -321,6 +326,12 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
       s = shown.length === 2 ? cap(lab) + ' is one conversation in ' + oneIn(hi.v) + ' for ' + W(hi.l.level) + ' (' + pct(hi.v) + ') and one in ' + oneIn(lo.v) + ' for ' + W(lo.l.level) + ' (' + pct(lo.v) + ').'
         : cap(lab) + ' is one conversation in ' + oneIn(hi.v) + ' for ' + W(hi.l.level) + ' (' + pct(hi.v) + '), the highest of any ' + dimDef[2] + ', and one in ' + oneIn(lo.v) + ' for ' + W(lo.l.level) + ' (' + pct(lo.v) + '), the lowest.';
       s += ' Across everyone it is one in ' + oneIn(all) + '.';
+    } else if (hi.v / lo.v < 1.1 || hi.v.toFixed(0) === lo.v.toFixed(0)) {
+      // the same whole percentage (or nearly) for every group: no "against"
+      s = hi.v.toFixed(0) === lo.v.toFixed(0)
+        ? 'About ' + hi.v.toFixed(0) + '% of ' + (shown.length === 2 ? W(hi.l.level) + ' and of ' + W(lo.l.level) : 'people in every ' + dimDef[2]) + ' had at least one conversation mainly about ' + lab + '.'
+        : 'The share of people with at least one conversation mainly about ' + lab + ' varies little by ' + dimDef[1].toLowerCase() + ': from ' + lo.v.toFixed(0) + '% of ' + W(lo.l.level) + ' to ' + hi.v.toFixed(0) + '% of ' + W(hi.l.level) + '.';
+      s += ' Across everyone: ' + all.toFixed(0) + '%.';
     } else {
       s = shown.length === 2 ? hi.v.toFixed(0) + '% of ' + W(hi.l.level) + ' had at least one conversation mainly about ' + lab + ', against ' + lo.v.toFixed(0) + '% of ' + W(lo.l.level) + '.'
         : hi.v.toFixed(0) + '% of ' + W(hi.l.level) + ' had at least one conversation mainly about ' + lab + ', the most of any ' + dimDef[2] + ', against ' + lo.v.toFixed(0) + '% of ' + W(lo.l.level) + '.';

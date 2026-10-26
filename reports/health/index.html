@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What Americans Ask ChatGPT About Health · State of the Prompt</title>
 <meta name="description" content="Report 1 from State of the Prompt: health and medicine is the most common subject people bring to ChatGPT. Who asks, what they want, and how it changed over a year.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="article">
+<meta property="og:title" content="What Americans Ask ChatGPT About Health">
+<meta property="og:description" content="Report 1 from State of the Prompt: health and medicine is the most common subject people bring to ChatGPT. Who asks, what they want, and how it changed over a year.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -179,21 +184,25 @@
     const RT = { asking: ['Ask a question', '#b00b33', '#ffffff'], expressing: ['Express something', '#0e77a4', '#ffffff'], doing: ['Ask ChatGPT to do something', '#a4a4a4', '#13233a'] };
     R.stack('f-stack', 'f-stack-key', d.request.map(([k, v]) => [RT[k][0], v, RT[k][1], RT[k][2]]));
     month(d.month);
+    R.onWidth(() => month(d.month));
     R.evenRows();
   }).catch(e => { console.error(e); });
 
   function month(m) {
-    const svg = document.getElementById('f-month'), mk = R.svg(svg), W = 700, H = 220, L = 44, Rr = 20, T = 18, B = 36, lo = 8.5, hi = 11;
+    const svg = document.getElementById('f-month'), mk = R.svg(svg), W = R.width(svg, 700), H = 220, L = 44, Rr = 20, T = 18, B = 36, lo = 8.5, hi = 11;
     const x = i => L + i * (W - L - Rr) / 11, y = v => T + (hi - v) / (hi - lo) * (H - T - B), font = 'Public Sans, Arial, sans-serif';
-    [9, 10, 11].forEach(v => { mk('line', { x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#e1e1e1' }); mk('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#7d7d7d', 'font-family': font }, v + '%'); });
-    m.forEach(([k], i) => mk('text', { x: x(i), y: H - 12, 'text-anchor': 'middle', 'font-size': 12, fill: '#7d7d7d', 'font-family': font }, R.MONTH[k.slice(5)]));
+    const narrow = W < 480;              // on a phone, every other month is labeled
+    svg.innerHTML = ''; svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    [9, 10, 11].forEach(v => { mk('line', { x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#e1e1e1' }); mk('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#6b6b6b', 'font-family': font }, v + '%'); });
+    m.forEach(([k], i) => { if (!narrow || i % 2 === 0) mk('text', { x: x(i), y: H - 14, 'text-anchor': 'middle', 'font-size': 12, fill: '#6b6b6b', 'font-family': font }, R.MONTH[k.slice(5)]); });
     mk('text', { x: x(0), y: H, 'text-anchor': 'start', 'font-size': 10.5, fill: '#a4a4a4', 'font-family': font }, '2025');
     mk('text', { x: x(6), y: H, 'text-anchor': 'start', 'font-size': 10.5, fill: '#a4a4a4', 'font-family': font }, '2026');
     const d = m.map(([, v], i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join('');
     mk('path', { d: d + 'L' + x(11) + ',' + y(lo) + 'L' + x(0) + ',' + y(lo) + 'Z', fill: 'rgba(176,11,51,0.08)' });
     mk('path', { d, fill: 'none', stroke: '#b00b33', 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
     const vs = m.map(r => r[1]), iMin = vs.indexOf(Math.min(...vs)), iMax = vs.indexOf(Math.max(...vs));
-    [iMin, iMax].forEach(i => { mk('circle', { cx: x(i), cy: y(vs[i]), r: 4.5, fill: '#b00b33', stroke: '#f3f3f3', 'stroke-width': 2 }); mk('text', { x: x(i), y: y(vs[i]) - 11, 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 600, fill: '#13233a', 'font-family': font }, vs[i].toFixed(1) + '%'); });
+    // a label at either end of the line is anchored inward, clear of the axis labels
+    [iMin, iMax].forEach(i => { mk('circle', { cx: x(i), cy: y(vs[i]), r: 4.5, fill: '#b00b33', stroke: '#f3f3f3', 'stroke-width': 2 }); mk('text', { x: x(i) + (i === 0 ? -4 : i === 11 ? 4 : 0), y: y(vs[i]) - 11, 'text-anchor': i === 0 ? 'start' : i === 11 ? 'end' : 'middle', 'font-size': 12.5, 'font-weight': 600, fill: '#13233a', 'font-family': font }, vs[i].toFixed(1) + '%'); });
   }
 })();
 </script>

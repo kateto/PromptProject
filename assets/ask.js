@@ -194,6 +194,26 @@
     'designers?|artists?|writers?|authors?|journalists?|reporters?|chefs?|cooks?|bakers?|farmers?|accountants?|bankers?|realtors?|real estate agents?|' +
     'salespeople|marketers?|managers?|business owners?|small business owners?|entrepreneurs?|police officers?|police|cops|firefighters?|' +
     'truck drivers?|drivers?|electricians?|plumbers?|mechanics?|contractors?|caregivers?|pastors?|priests?|musicians?|actors?|athletes?|coaches?';
+  // Other groups the site has no figures for, named as the people asking ("what do
+  // Republicans ask about?"). Without this, "Republicans" is read as the subject
+  // politics and "veterans" as a mention of the word; [pattern, what is not recorded].
+  const UNRECORDED = [
+    ['republicans?|democrats?|independents?|conservatives?|liberals?|progressives?|leftists?|right[- ]wingers?|left[- ]wingers?|' +
+      '(trump|biden|harris) (supporters|voters)|maga( supporters| voters)?', 'political party or views'],
+    ['military veterans?|veterans?|service members?|soldiers|troops|military (families|spouses|members)', 'military service'],
+    ['lgbtqia\\+?( people)?|lgbtq?\\+?( people| folks| users| americans)?|gay (people|men|users)|gays|lesbians?|bisexuals?|queer (people|folks)|' +
+      'trans (people|women|men|folks)|transgender (people|women|men|users)|transgender|non ?binary (people|users)|non ?binary', 'sexual orientation or gender identity'],
+    ['christians?|catholics?|protestants?|evangelicals?|muslims?|jews|jewish (people|americans)|hindus?|buddhists?|sikhs?|mormons?|' +
+      'atheists?|agnostics?|religious (people|americans|users)', 'religion'],
+    ['immigrants?|migrants?|refugees?|asylum seekers?|non ?citizens|undocumented (people|immigrants)|green card holders?', 'immigration status'],
+    ['people with disabilities|disabled (people|users|americans)', 'disability']
+  ];
+  const ASKER_BEFORE = '(?<= (?:do|does|did|are|would|could|can) )';
+  const ASKER_AFTER = '(?= (?:ask|use|talk|want|search|chat|type|bring|look|need|write|get|turn|and|or|differ))';
+  // Suicide and self-harm are not reported on this site (no subject, no mention
+  // terms); a question about them gets a plain answer, never a nearby subject.
+  const SENSITIVE = 'suicid(e|es|al)|self ?harm(s|ing)?|self ?injur(y|ies|ing)|kill(ing)? (myself|themselves|himself|herself|yourself)|' +
+    'end(ing)? (my|their|his|her|your) (own )?li(fe|ves)|cutting (myself|themselves)';
 
   const MONTHS = ['2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
   const MONTH_NAME = { '2025-07': 'July 2025', '2025-08': 'August 2025', '2025-09': 'September 2025', '2025-10': 'October 2025',
@@ -249,6 +269,7 @@
     const s = { t: norm(question) };
     const out = { q: question, who: [], what: [], why: [], when: [], notes: [], minors: false, intent: 'general' };
     const raw = s.t;
+    out.sensitive = new RegExp(' (' + SENSITIVE + ')(?= )').test(raw);
 
     const par = take(s, PARENTS_OF);   // before MINORS: parents of teenagers are adults
     if (par) {
@@ -303,6 +324,17 @@
     out.who.sort((a, b) => a.at - b.at);
     const occ = take(s, '(?<= (?:do|does|did|are|would|could|can) )(?:' + OCCUPATIONS + ')(?= (?:ask|use|talk|want|search|chat|type|bring|look|need|write|get|turn))');
     if (occ) out.notes.push('Figures are not published by occupation, so "' + occ + '" is read as everyone.');
+    for (const [pat, what] of UNRECORDED) {
+      const first = take(s, ASKER_BEFORE + '(?:' + pat + ')' + ASKER_AFTER);
+      if (!first) continue;
+      const named = [first];           // "Republicans and Democrats", "... than Democrats"
+      let more;
+      while ((more = take(s, '(?<= (?:and|or|than|vs|versus|to) )(?:' + pat + ')'))) named.push(more);
+      out.unrecorded = what;
+      out.notes.push('Figures are not published by ' + what + ', so ' + andList(named.map(w => '"' + asTyped(question, w) + '"')) +
+        (named.length > 1 ? ' are' : ' is') + ' read as everyone.');
+      break;
+    }
     DIMWORD.forEach(([pat, dim]) => { if (!out.dim && take(s, pat)) out.dim = dim; });
     const beforeWhat = s.t;
     WHAT.forEach(([pat, code]) => { if (take(s, pat)) out.what.push(code); });
@@ -354,6 +386,12 @@
     return items.slice(0, -1).join(semi ? '; ' : ', ') + (semi ? '; and ' : ' and ') + items[items.length - 1];
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+  // A matched phrase as the visitor typed it ("LGBTQ", not "lgbtq"), for notes.
+  function asTyped(question, hit) {
+    const words = hit.split(' ').map(w => w.replace(/[^a-z0-9]/g, '')).filter(Boolean);
+    const m = words.length ? new RegExp(words.join('[^A-Za-z0-9]+'), 'i').exec(String(question || '')) : null;
+    return m ? m[0] : hit;
+  }
 
   function measureVerb(m) {
     const V = { pol: 'involve politics, government or law', p_asking: 'ask a question', p_doing: 'ask ChatGPT to do something',
@@ -450,8 +488,11 @@
     if (opt.ref != null) h += '<p class="abkey"><i></i>' + esc(opt.refLabel || 'Everyone') + ': ' + fmt(opt.ref) + '</p>';
     return h;
   }
+  // Charts are drawn at the width they are shown at (CHART_W, set by render() from
+  // the answer's width), so their text keeps its size on a phone.
+  let CHART_W = 640;
   function columnsSVG(points, opt) {     // points: [{label, v, hi}]; opt.fmt as in barsHTML
-    const W = 640, H = 200, L = 36, R = 8, T = 14, B = 30;
+    const W = CHART_W, H = 200, L = 36, R = 8, T = 14, B = 30;
     const fmt = opt.fmt || pct;
     const vs = points.map(p => p.v).filter(v => v != null);
     const lows = points.map(p => p.lowTo).filter(v => v != null);
@@ -462,7 +503,7 @@
     [0.5, 1].forEach(f => {
       const y = T + (1 - f) * (H - T - B), v = max * f;
       s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="#e8e8e8"/>' +
-        '<text x="' + (L - 6) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#7d7d7d">' + (opt.fmt ? opt.axis(v) : v.toFixed(v < 2 ? 1 : 0) + '%') + '</text>';
+        '<text x="' + (L - 6) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#6b6b6b">' + (opt.fmt ? opt.axis(v) : v.toFixed(v < 2 ? 1 : 0) + '%') + '</text>';
     });
     points.forEach((p, i) => {
       const x = L + i * bw;
@@ -475,10 +516,10 @@
         s += '<rect x="' + (x + bw * 0.15).toFixed(1) + '" y="' + (H - B - h).toFixed(1) + '" width="' + (bw * 0.7).toFixed(1) + '" height="' + h.toFixed(1) +
           '" rx="1.5" fill="url(#' + hid + ')"><title>' + esc(p.label + ': too few mentions to publish an exact figure (under ' + fmt(p.lowTo) + ')') + '</title></rect>';
       } else if (p.held) {
-        s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - B - 3) + '" text-anchor="middle" font-size="12" fill="#7d7d7d">×<title>' +
+        s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - B - 3) + '" text-anchor="middle" font-size="12" fill="#6b6b6b">×<title>' +
           esc(p.label + ': withheld, because a handful of people supply most of the mentions') + '</title></text>';
       }
-      if (p.tick) s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="#7d7d7d">' + esc(p.tick) + '</text>';
+      if (p.tick && (bw >= 24 || i % 2 === 0)) s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="#6b6b6b">' + esc(p.tick) + '</text>';   // narrow: every other label
     });
     s += '</svg>';
     if (lows.length) s += '<p class="alegend"><span><i style="height:10px;width:16px;background:repeating-linear-gradient(45deg,#ececec 0 3px,#cfcfcf 3px 5px)"></i>Too few mentions that month to publish an exact figure; the true value is below the hatched bar</span></p>';
@@ -544,7 +585,7 @@
     return out;
   }
   function mentionRoute(P) {           // which terms a question is about, if it is a mentions question
-    if (!MENT || P.minors) return [];
+    if (!MENT || P.minors || P.sensitive) return [];
     const all = P.mentionsAll.map(h => h.id);
     const rest = P.mentionsRest.filter(h => !SKIP_IMPLICIT.has(h.p)).map(h => h.id);
     const named = all.filter(id => /^(People|Places)/.test(MENT.byId[id].cat));
@@ -605,7 +646,7 @@
   function linesSVG(series, opt) {
     opt = opt || {};
     const fmt = opt.fmt || perK, axis = opt.axis || axisK, floor = opt.floor || null;
-    const W = 640, H = 230, L = 40, R = 10, T = 14, B = 30;
+    const W = opt.width || CHART_W, H = 230, L = 40, R = 10, T = 14, B = 30;
     const anyLow = !!floor && series.some(se => (se.low || []).some(Boolean));
     const vs = [].concat(...series.map(s => s.values)).filter(v => v != null);
     if (!vs.length && !anyLow) return '<p class="empty">No month has enough mentions to publish a figure.</p>';
@@ -620,9 +661,10 @@
     }
     [0.5, 1].forEach(f => {
       s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(max * f).toFixed(1) + '" y2="' + y(max * f).toFixed(1) + '" stroke="#e8e8e8"/>' +
-        '<text x="' + (L - 6) + '" y="' + (y(max * f) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#7d7d7d">' + axis(max * f) + '</text>';
+        '<text x="' + (L - 6) + '" y="' + (y(max * f) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#6b6b6b">' + axis(max * f) + '</text>';
     });
-    MONTHS.forEach((k, i) => { s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="#7d7d7d">' + esc(MONTH_NAME[k].slice(0, 3)) + '</text>'; });
+    const every = (W - L - R) / (MONTHS.length - 1) < 26 ? 2 : 1;   // narrow: every other month labeled
+    MONTHS.forEach((k, i) => { if (i % every === 0) s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="#6b6b6b">' + esc(MONTH_NAME[k].slice(0, 3)) + '</text>'; });
     series.forEach((se, j) => {
       const c = LINE_COLORS[j % LINE_COLORS.length];
       // a point per month: the published value, or (for a low month) a ghost inside the band
@@ -657,16 +699,45 @@
     const ph = ts.map(t => t.name + ': ' + [].concat(t.phrases).slice(0, 6).join(', ') + ([].concat(t.phrases).length > 6 ? '…' : '')).join('; ');
     return 'A mention means the words appear in the person’s own message, whatever the conversation is about. Counted as: ' + ph + '.';
   }
+  // Names in a list or mention question ("Compare Trump, Musk and Harris") that
+  // matched no term, with the listed terms whose names contain them, so they are
+  // reported rather than dropped silently.
+  function unlisted(P) {
+    const q = String(P.q || '');
+    const k = /^.*\b(compare|comparing|compared|mention|mentions|mentioned|mentioning)\b/i.exec(q);
+    if (!k && !/,|\b(vs\.?|versus)\b/i.test(q)) return [];
+    const lower = q === q.toLowerCase();
+    const hits = P.mentionsAll.concat(P.mentionsRest);
+    return (k ? q.slice(k[0].length) : q).split(/,|;|\band\b|\bor\b|\bvs\.?|\bversus\b|\bwith\b/i)
+      .map(s => s.replace(/[?.!"“”]+/g, '').replace(/^\s*(the|of)\s+/i, '').trim())
+      .filter(s => s && s.split(/\s+/).length <= 3 && /[a-z]/i.test(s))
+      .filter(s => !hits.some(h => norm(s).indexOf(' ' + h.p + ' ') >= 0))
+      .filter(s => {
+        if (!lower) return /^[A-Z]/.test(s) && !/^(How|What|When|Who|Which|Why|Do|Does|Is|Are|People|Everyone)\b/.test(s);
+        const p = parse(s);              // in an all-lowercase question, skip words read as groups or times
+        return !p.who.length && !p.when.length && !p.why.length && !p.dim && !p.minors;
+      })
+      .map(s => ({ s, alts: MENT.terms.filter(t => new RegExp('(^|[^a-z])' + s.toLowerCase().replace(/[^a-z0-9 ]/g, '') + '($|[^a-z])', 'i').test(t.name)).slice(0, 3) }));
+  }
+  function unlistedNote(un) {
+    return 'Not on our list of terms, so left out: ' + andList(un.map(u => '“' + u.s + '”' + (u.alts.length ? ' (try ' + u.alts.map(t => t.name).join(' or ') + ')' : ''))) + '.';
+  }
 
   function mentionAnswer(res, P, ids) {
     const ts = ids.map(id => MENT.byId[id]);
     res.notes.push(mentionNote(ts));
-    ts.forEach(t => { if (t.note) res.notes.push(t.name + ': ' + t.note + '.'); });
+    ts.forEach(t => { if (t.note) res.notes.push(t.name + ': ' + t.note); });
+    const un = unlisted(P);
+    if (un.length) res.notes.push(unlistedNote(un));
+    const extra = P.mentionsAll.map(h => h.id).filter((id, i, a) => a.indexOf(id) === i && !ids.includes(id));
+    if (ids.length === 5 && extra.length) res.notes.push('Up to five terms can be compared at once, so ' + andList(extra.map(id => MENT.byId[id].name)) + (extra.length > 1 ? ' were' : ' was') + ' left out.');
     let who = P.who[0] || null, who2 = P.who[1] && P.who[1].dim === who.dim ? P.who[1] : null;
     if (P.who.length > (who2 ? 2 : 1)) res.notes.push('Mentions can be shown for one kind of group at a time; ' + P.who.slice(who2 ? 2 : 1).map(whoLabel).join(' and ') + ' left out.');
     const when = P.when[0] || null;
     if (/^Places/.test(ts[0].cat) && / (people|those|folks|residents|users) (in|from) | who live in /.test(P.raw))
       res.notes.push('Figures are not broken down by state or city. This shows how often people mention ' + ts[0].name + ' instead.');
+    if (ts.length >= 2 && who2) res.notes.push('Several terms can be compared for one group at a time, so this shows ' + whoLabel(who) + ' only.');
+    if (ts.length >= 2 && when) res.notes.push('Several terms are compared over the whole year; the time was left out.');
     if (ts.length >= 2) return mentionCompare(res, ts, who);
     const t = ts[0], d = MDET[t.id];
     if (who && when) res.notes.push('Mentions by group are shown for the whole year; the time was left out.');
@@ -834,10 +905,30 @@
       res.more = [['What do people aged 18 to 24 ask about?', 'What do people aged 18 to 24 ask about?'], ['What do students ask at night?', 'What do students ask at night?']];
       return res;
     }
+    if (P.sensitive) {                  // no figures on suicide or self-harm; never a nearby subject in their place
+      res.notes = [];
+      res.title = 'This site does not report on suicide or self-harm.';
+      res.body.push('Conversations about mental health in general are counted with the other subjects.');
+      res.body.push('If you are thinking about suicide, or are worried about someone, you can call or text 988 to reach the 988 Suicide and Crisis Lifeline in the US.');
+      res.more = [['What do people ask about mental health?', 'What do people ask about mental health?'], ['Who asks about mental health the most?', 'Who asks about mental health the most?']];
+      return res;
+    }
 
     // Mentions of a named term (a person, a place, a product...) take precedence.
     const mids = mentionRoute(P);
     if (mids.length) return mentionAnswer(res, P, mids);
+    // "How often do people mention Harris?": a name that is not on the list is
+    // reported as such, rather than answered with a subject it happens to match.
+    if (P.mentionIntent && MENT) {
+      const un = unlisted(P);
+      if (un.length) {
+        res.title = (un.length === 1 ? '“' + un[0].s + '” is' : andList(un.map(u => '“' + u.s + '”')) + ' are') + ' not on our list of terms.';
+        res.body.push('This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well come up in the conversations; it is simply not counted here.');
+        res.more = [].concat(...un.map(u => u.alts.map(t => ['How often do people mention ' + t.name + '?', 'How often do people mention ' + t.name + '?'])));
+        res.links = [['Browse the list of terms', '../trends/#b-h']];
+        return res;
+      }
+    }
 
     let who = P.who[0] || null, who2 = null;
     if (P.who.length > 1) {
@@ -897,7 +988,7 @@
       if (who) return groupTop(res, who);
       if (when) return timeTop(res, when);
       // "What do people ask about?", or an occupation read as everyone ("what do nurses ask about?")
-      if (!P.dim && (P.occupation || / (what|how) (do|does|did) (people|americans|users|adults|folks|everyone|everybody|the public|you) (ask|use|talk|chat)/.test(P.raw))) return everyoneTop(res);
+      if (!P.dim && (P.occupation || P.unrecorded || / (what|how) (do|does|did) (people|americans|users|adults|folks|everyone|everybody|the public|you) (ask|use|talk|chat)/.test(P.raw))) return everyoneTop(res);
       if (P.dim) {
         res.title = 'Name a subject to see how it varies by ' + DATA.dims[P.dim].toLowerCase() + '.';
         res.body.push('For example: does health vary by ' + DATA.dims[P.dim].toLowerCase() + '?');
@@ -1162,6 +1253,7 @@
   /* -------------------------------------------------------------- render */
 
   function render(root, question, askBase) {
+    CHART_W = Math.round(Math.max(280, Math.min(640, (root.clientWidth || 680) - 40)));   // the chart panel's padding is 20px a side
     const r = answer(question);
     const link = q => askBase + '?q=' + encodeURIComponent(q);
     let h = '';

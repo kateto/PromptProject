@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>State of the Prompt</title>
 <meta name="description" content="A Rutgers University study of how people use AI in everyday life, based on a year of ChatGPT conversations shared by a US research panel. Every figure is an aggregate.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="State of the Prompt">
 <meta property="og:description" content="What people ask AI: a year of ChatGPT conversations from a US research panel, in aggregate.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -23,7 +26,7 @@
   --glow: #ffcf86;
   --ink: #13233a;
   --ink-2: #595959;
-  --ink-3: #7d7d7d;
+  --ink-3: #6b6b6b;
   --rule: #e1e1e1;
   --paper: #ffffff;
   --mist: #f3f3f3;
@@ -116,7 +119,9 @@ a { color: inherit; }
 .toggles { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
 .toggles .chip { display: inline-flex; align-items: center; gap: 6px; background: #fff; }
 .toggles .chip[aria-pressed="false"] { opacity: 0.45; }
-.chart-wrap { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 10px 8px 4px; }
+.chart-wrap { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 10px 8px 4px; overflow-x: auto; }
+.swipe { display: none; font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+@media (max-width: 800px) { .swipe { display: block; } }   /* the year chart keeps its text size on a phone and scrolls sideways */
 .chart-wrap svg { width: 100%; display: block; }
 .readout { font-size: 14px; color: var(--ink); margin-top: 10px; min-height: 22px; font-variant-numeric: tabular-nums; }
 
@@ -289,6 +294,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
     <p class="lead">Each line is a subject’s weekly share of conversations against its own yearly average. School follows the school calendar, sports follow the big games, and politics follows the news.</p>
     <div class="toggles" id="toggles" role="group" aria-label="Show or hide lines"></div>
     <div class="chart-wrap"><svg id="yrchart" viewBox="0 0 1000 360" role="img" aria-label="Weekly share of school, politics and sports conversations relative to their yearly averages, July 2025 to June 2026"></svg></div>
+    <p class="swipe">Swipe sideways to see the whole year; tap the chart to read a week.</p>
     <p class="readout" id="yrread" aria-live="polite"></p>
   </div>
 </section>
@@ -488,7 +494,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
       const d = s.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join('');
       mk(svg, 'path', { d: d + 'L' + x(n - 1) + ',' + y(lo) + 'L' + x(0) + ',' + y(lo) + 'Z', fill: 'rgba(176,11,51,0.10)' });
       mk(svg, 'path', { d, fill: 'none', stroke: '#b00b33', 'stroke-width': 2, 'stroke-linejoin': 'round' });
-      monthTicks(W).filter(t => ['Jul', 'Oct', 'Jan', 'Apr', 'Jun'].includes(t.m)).forEach(t => mk(svg, 'text', { x: x(t.w), y: 127, 'font-size': 10.5, fill: '#7d7d7d', 'text-anchor': t.w < 1 ? 'start' : 'middle', 'font-family': FONT }, t.m));
+      monthTicks(W).filter(t => ['Jul', 'Oct', 'Jan', 'Apr', 'Jun'].includes(t.m)).forEach(t => mk(svg, 'text', { x: x(t.w), y: 127, 'font-size': 10.5, fill: '#6b6b6b', 'text-anchor': t.w < 1 ? 'start' : 'middle', 'font-family': FONT }, t.m));
     })();
     // work and health by hour
     (function () {
@@ -499,7 +505,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
         mk(svg, 'path', { d: H.map((r, h) => (h ? 'L' : 'M') + x(h).toFixed(1) + ',' + y(r.s[k]).toFixed(1)).join(''), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round' });
         mk(svg, 'text', { x: x(23) + 6, y: y(H[23].s[k]) + 4, 'font-size': 11.5, fill: c, 'font-weight': 600, 'font-family': FONT }, n);
       });
-      [[0, '12 am'], [6, '6 am'], [12, 'noon'], [18, '6 pm']].forEach(([h, t]) => mk(svg, 'text', { x: x(h), y: 127, 'font-size': 10.5, fill: '#7d7d7d', 'text-anchor': h === 0 ? 'start' : 'middle', 'font-family': FONT }, t));
+      [[0, '12 am'], [6, '6 am'], [12, 'noon'], [18, '6 pm']].forEach(([h, t]) => mk(svg, 'text', { x: x(h), y: 127, 'font-size': 10.5, fill: '#6b6b6b', 'text-anchor': h === 0 ? 'start' : 'middle', 'font-family': FONT }, t));
     })();
   }
 
@@ -525,10 +531,12 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
       { n: 'Politics', c: '#0e77a4', s: idx(W.map(w => w.s.politics_government_law)) },
       { n: 'Sports', c: '#858585', s: idx(W.map(w => w.s.sports)) }
     ];
-    const svg = document.getElementById('yrchart'), Wd = 1000, H = 360, L = 52, Rr = 86, T = 46, B = 40, lo = 0.25, hi = 1.75;
+    // On a narrow screen the chart is drawn 760 wide and scrolls sideways, so its labels keep their size.
+    const svg = document.getElementById('yrchart'), narrow = svg.parentNode.clientWidth < 760, Wd = narrow ? 760 : 1000, H = 360, L = 52, Rr = 86, T = 46, B = 40, lo = 0.25, hi = 1.75;
+    svg.setAttribute('viewBox', '0 0 ' + Wd + ' ' + H); svg.style.minWidth = narrow ? Wd + 'px' : '';
     const x = i => L + i * (Wd - L - Rr) / (n - 1), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
-    [0.5, 1, 1.5].forEach(v => { mk(svg, 'line', { x1: L, x2: Wd - Rr, y1: y(v), y2: y(v), stroke: v === 1 ? '#a4a4a4' : '#e8e8e8', 'stroke-width': 1 }); mk(svg, 'text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#7d7d7d', 'font-family': FONT }, v === 1 ? 'usual' : v + '×'); });
-    monthTicks(W).forEach(t => mk(svg, 'text', { x: x(t.w), y: H - 14, 'font-size': 12, fill: '#7d7d7d', 'font-family': FONT }, t.m));
+    [0.5, 1, 1.5].forEach(v => { mk(svg, 'line', { x1: L, x2: Wd - Rr, y1: y(v), y2: y(v), stroke: v === 1 ? '#a4a4a4' : '#e8e8e8', 'stroke-width': 1 }); mk(svg, 'text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#6b6b6b', 'font-family': FONT }, v === 1 ? 'usual' : v + '×'); });
+    monthTicks(W).forEach(t => mk(svg, 'text', { x: x(t.w), y: H - 14, 'font-size': 12, fill: '#6b6b6b', 'font-family': FONT }, t.m));
     const groups = SER.map(s => { const g = mk(svg, 'g', {}); mk(g, 'path', { d: s.s.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(''), fill: 'none', stroke: s.c, 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }); mk(g, 'text', { x: Wd - Rr + 8, y: y(s.s[n - 1]) + 4, 'font-size': 13, fill: s.c === '#858585' ? '#5f5f5f' : s.c, 'font-weight': 600, 'font-family': FONT }, s.n); return g; });
     // notes: week index, text, series, row
     const notes = [[8, 'Back to school', 0, 0], [13, 'Government shutdown', 1, 1], [21, 'Thanksgiving', 0, 0], [25, 'Winter break', 0, 1], [31, 'Super Bowl', 2, 1], [49, 'World Cup', 2, 0]];
@@ -543,7 +551,8 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
       rd.textContent = 'Week of ' + startOf(W[i]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ': ' + (parts.length ? parts.join(' · ') + ' its usual share' : 'pick a line above');
     }
     const hit = mk(svg, 'rect', { x: L, y: T, width: Wd - L - Rr, height: H - T - B, fill: 'transparent' });
-    hit.addEventListener('mousemove', e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * Wd / r.width; show(Math.max(0, Math.min(n - 1, Math.round((px - L) / ((Wd - L - Rr) / (n - 1)))))); });
+    const pick = e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * Wd / r.width; show(Math.max(0, Math.min(n - 1, Math.round((px - L) / ((Wd - L - Rr) / (n - 1)))))); };
+    hit.addEventListener('pointermove', pick); hit.addEventListener('pointerdown', pick);   // pointer events cover mouse and touch
     const tg = document.getElementById('toggles');
     SER.forEach((s, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'true'); b.innerHTML = '<i class="sw" style="background:' + s.c + '"></i>' + s.n; b.addEventListener('click', () => { on[k] = !on[k]; b.setAttribute('aria-pressed', on[k]); groups[k].style.display = on[k] ? '' : 'none'; show(cur); }); tg.appendChild(b); });
     show(cur);
