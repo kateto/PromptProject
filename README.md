@@ -19,7 +19,7 @@ The panel is not a random sample of the country, so our analyses focus on compar
 - **Insights**: short findings on what people ask AI, and when.
 - **Reports**: longer write-ups on particular subjects, starting with politics and health.
 - **Explore**: a dashboard of who asks about what, by group.
-- **Ask the data**: questions in plain words, answered from published totals. Questions are answered in the visitor's browser and are never sent anywhere.
+- **Ask the data**: questions in plain words, answered from published totals. The question box suggests questions as you type and allows for small typos. Questions are answered in the visitor's browser and are never sent anywhere.
 - **Trends**: how often people mention particular people, places, products, and other terms, month by month and across groups.
 
 ## Privacy
@@ -45,19 +45,3 @@ For questions about the project, press inquiries, or collaboration, use the cont
 ## About this repository
 
 The site is plain HTML, CSS, and JavaScript served by GitHub Pages, with no build step. The aggregate figures in `data/` are produced by the project's analysis code, which runs on the secure systems that hold the conversations and is not part of this repository.
-
-## The question box
-
-The box on the home page and on Ask the data (`assets/ask-search.js`, `assets/ask-search.css`) offers whole questions while you type, grouped by what the next words could be (people, subjects, times, purposes, mentions), plus questions from a pool that match the typed words; an empty box offers six questions to try, and the placeholder rotates through the pool. Arrow keys move, Enter takes a completion into the box, Enter on a question asks it, Escape closes. Small typos in a typed word still find the phrase.
-
-Everything the box offers comes from `data/questions.json`, built by
-
-```
-node tools/build_questions.mjs
-```
-
-which runs every candidate question through this site's own parser and answer code (`assets/ask.js`, loaded headless) and keeps only those that read as intended and answer from published figures. Rerun it after `data/ask.json` or `assets/ask.js` changes. `node tools/test_search.mjs` checks the completion logic. The parser and the answers are not changed by any of this; the box only helps write a question they read well.
-
-### Merged question reading
-
-On Ask the data, a question is read twice. Mentions keep first say: a question about a named term (Ozempic, Bitcoin, Taylor Swift, Texas) goes to this site's own router untouched. For everything else `assets/ask-reader.js` (a lexicon parser with synonyms, occupations, typo correction, purpose and time words, built from the `claude_website` project by `claude_website/site/tools/build_reader.sh`) reads the question into groups, subject, time and purpose over this site's vocabulary and writes a question this site's parser reads with certainty; `assets/ask-merge.js` decides which reading is used. The reader takes over only when it reads strictly more of the question than this site's parser did (a typo fixed, a purpose or group that was missed); otherwise this site's own reading stands. Notes above the answer say what was corrected, converted (an hour becomes its part of the day for a group) or left out (a group this site has no figures for, such as an industry or a state). The answer code and the figures are untouched. `node tools/test_merge.mjs` runs a battery of questions through the merged reading and checks that no question in the pool changes its reading.

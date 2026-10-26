@@ -116,15 +116,14 @@
 
   const WHO = [
     // [pattern, dim, level, note]
-    ['65 and (over|older)|65\\+|over 65|seniors?|senior citizens|elderly|oldest|retirement age|baby boomers|boomers', 'age', '65+'],
+    ['65 and (over|older)|65\\+|over 65|seniors?|senior citizens|elderly|oldest|retirement age', 'age', '65+'],
     ['older (people|adults|americans|users|folks)|older', 'age', '65+', 'Shown as people 65 and over.'],
-    ['55 (to|and) 64|55 64|late 50s|early 60s|in their 50s|fifties', 'age', '55-64'],
+    ['55 (to|and) 64|55 64', 'age', '55-64'],
     ['45 (to|and) 54|45 54', 'age', '45-54'],
-    ['middle[- ]aged|in their 40s|forties', 'age', '45-54', 'Shown as people aged 45 to 54.'],
-    ['35 (to|and) 44|35 44|in their 30s|thirties|thirtysomethings', 'age', '35-44'],
-    ['25 (to|and) 34|25 34|millennials', 'age', '25-34'],
-    ['in their 20s|twenties|twentysomethings', 'age', '25-34', 'Shown as people aged 25 to 34.'],
-    ['18 (to|and) 24|18 24|young adults|young people|younger (people|adults|users|americans)|youngest|college[- ]age|gen z|younger', 'age', '18-24'],
+    ['middle[- ]aged', 'age', '45-54', 'Shown as people aged 45 to 54.'],
+    ['35 (to|and) 44|35 44', 'age', '35-44'],
+    ['25 (to|and) 34|25 34', 'age', '25-34'],
+    ['18 (to|and) 24|18 24|young adults|young people|younger (people|adults|users|americans)|youngest|college[- ]age|younger', 'age', '18-24'],
     ['retirees|retired( people)?', 'employment', 'Retired'],
     ['college students|grad(uate)? students|students?', 'employment', 'Student'],
     ['unemployed|jobless|out of work|not working', 'employment', 'Unemployed'],
@@ -157,7 +156,44 @@
     ['the south|south|southern(ers)?', 'region', 'South'],
     ['west coast|the west|west|western(ers)?', 'region', 'West']
   ];
-  const MINORS = 'teens?|teenagers?|adolescents?|minors?|under 18|high schoolers|high school students|middle schoolers|(?<!(with|without|no|have|has|their|my|our) )(kids|children) (ask|use|talk|do|want)|what do (kids|children)';
+  const MINORS = 'teens?|teenagers?|teenage|teenaged|underage|preteens?|pre teens?|tweens?|tweenagers?|adolescents?|minors?|under 18|high schoolers|high school students|middle schoolers|(?<!(with|without|no|have|has|their|my|our) )(kids|children) (ask|use|talk|do|want)|what do (kids|children)';
+  // Parents of children of any age are adults, and are answered as the parent
+  // group; read before MINORS so "parents of teenagers" is not refused. Questions
+  // about the young people themselves ("teen parents", "teenage moms",
+  // "teenagers with parents") do not match and are still refused.
+  const PARENTS_OF = '(parents?|moms?|dads?|mothers?|fathers?|people|adults) (of|with|who have|raising) ' +
+    '(young |little |small |teenage |school ?age |grown |adult )?' +
+    '(teens?|teenagers?|adolescents?|minors?|preteens?|tweens?|high schoolers|high school students|middle schoolers|kids|children|a child|a kid|a teen|a teenager|toddlers|babies|a baby)( at home)?' +
+    '|(teens|teenagers|kids|children)( s)? (parents|moms|dads|mothers|fathers)';
+
+  // Decades and generations straddle the site's age groups (18-24, 25-34, ...),
+  // so one that spans two groups is shown as both, compared; [pattern, levels, note].
+  const AGE_SPANS = [
+    ['early 20s|early twenties', ['18-24']], ['late 20s|late twenties', ['25-34']],
+    ['early 30s|early thirties', ['25-34']], ['late 30s|late thirties', ['35-44']],
+    ['early 40s|early forties', ['35-44']], ['late 40s|late forties', ['45-54']],
+    ['early 50s|early fifties', ['45-54']], ['late 50s|late fifties', ['55-64']],
+    ['early 60s|early sixties', ['55-64']], ['late 60s|late sixties', ['65+']],
+    ['in their (70s|80s|90s)|seventies|eighties|nineties', ['65+']],
+    ['in their 20s|twenties|twentysomethings|20 somethings', ['18-24', '25-34'], 'People in their twenties fall into two of the site’s age groups, so both are shown.'],
+    ['in their 30s|thirties|thirtysomethings|30 somethings', ['25-34', '35-44'], 'People in their thirties fall into two of the site’s age groups, so both are shown.'],
+    ['in their 40s|forties', ['35-44', '45-54'], 'People in their forties fall into two of the site’s age groups, so both are shown.'],
+    ['in their 50s|fifties', ['45-54', '55-64'], 'People in their fifties fall into two of the site’s age groups, so both are shown.'],
+    ['in their 60s|sixties', ['55-64', '65+'], 'People in their sixties fall into two of the site’s age groups, so both are shown.'],
+    ['millennials', ['25-34', '35-44'], 'Millennials were about 30 to 45 in 2026, so the two age groups that cover them are shown.'],
+    ['gen x|generation x|gen xers', ['45-54', '55-64'], 'Generation X was about 46 to 61 in 2026, so the two age groups that cover it are shown.'],
+    ['gen z|generation z|zoomers', ['18-24'], 'Shown as people aged 18 to 24, the youngest adults; the oldest of Gen Z were in their late twenties in 2026.'],
+    ['baby boomers|boomers', ['65+'], 'Shown as people 65 and over, where most baby boomers were in 2026.']
+  ];
+
+  // Occupations named as the people asking ("what do lawyers ask about money?").
+  // Figures are not published by occupation, and without this "lawyers" would be
+  // read as the subject law, "nurses" as health, "teachers" as education.
+  const OCCUPATIONS = 'lawyers?|attorneys?|paralegals?|nurses?|doctors?|physicians?|surgeons?|dentists?|pharmacists?|therapists?|counselors?|social workers?|' +
+    'teachers?|professors?|educators?|tutors?|programmers?|software engineers?|engineers?|developers?|coders?|data scientists?|scientists?|researchers?|' +
+    'designers?|artists?|writers?|authors?|journalists?|reporters?|chefs?|cooks?|bakers?|farmers?|accountants?|bankers?|realtors?|real estate agents?|' +
+    'salespeople|marketers?|managers?|business owners?|small business owners?|entrepreneurs?|police officers?|police|cops|firefighters?|' +
+    'truck drivers?|drivers?|electricians?|plumbers?|mechanics?|contractors?|caregivers?|pastors?|priests?|musicians?|actors?|athletes?|coaches?';
 
   const MONTHS = ['2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
   const MONTH_NAME = { '2025-07': 'July 2025', '2025-08': 'August 2025', '2025-09': 'September 2025', '2025-10': 'October 2025',
@@ -169,6 +205,8 @@
   const DAY = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const DAYPART_LABEL = { morning: 'in the morning (5 am to noon)', afternoon: 'in the afternoon (noon to 5 pm)',
     evening: 'in the evening (5 to 10 pm)', night: 'at night (10 pm to 5 am)' };
+  const DAYPART_SPAN = { morning: '5 am to noon', afternoon: 'noon to 5 pm', evening: '5 to 10 pm', night: '10 pm to 5 am' };
+  const GROUP_TIME_NOTE = 'Times can be combined with a group only as morning, afternoon, evening, night, weekdays or weekends; the time was left out.';
 
   const WHEN = [
     // [pattern, kind, value, label, note]
@@ -212,6 +250,12 @@
     const out = { q: question, who: [], what: [], why: [], when: [], notes: [], minors: false, intent: 'general' };
     const raw = s.t;
 
+    const par = take(s, PARENTS_OF);   // before MINORS: parents of teenagers are adults
+    if (par) {
+      out.who.push({ dim: 'children', level: 'Yes, and at least one lives in my home', at: s.at });
+      const kid = par.replace(/^(parents?|moms?|dads?|mothers?|fathers?|people|adults) (of|with|who have|raising) /, '');
+      if (/teen|adolescent|minor|tween|school|young|little|small|toddler|bab|grown|adult/.test(kid)) out.notes.push('Figures for parents do not record the children’s ages, so this shows all parents with a child at home.');
+    }
     if (take(s, MINORS)) out.minors = true;
 
     // when: clock times first (they contain numbers the age patterns would read)
@@ -247,10 +291,18 @@
       }
       s.t = s.t.slice(0, m.index) + ' ' + '#'.repeat(m[0].length - 1) + s.t.slice(m.index + m[0].length);
     }
+    AGE_SPANS.forEach(([pat, levels, note]) => {
+      if (take(s, pat)) {
+        levels.forEach(level => out.who.push({ dim: 'age', level, at: s.at }));
+        out.notes.push(note || 'Shown as ' + LEVEL.age[levels[0]] + '.');
+      }
+    });
     WHO.forEach(([pat, dim, level, note]) => {
       if (take(s, pat)) { out.who.push({ dim, level, at: s.at }); if (note) out.notes.push(note); }
     });
     out.who.sort((a, b) => a.at - b.at);
+    const occ = take(s, '(?<= (?:do|does|did|are|would|could|can) )(?:' + OCCUPATIONS + ')(?= (?:ask|use|talk|want|search|chat|type|bring|look|need|write|get|turn))');
+    if (occ) out.notes.push('Figures are not published by occupation, so "' + occ + '" is read as everyone.');
     DIMWORD.forEach(([pat, dim]) => { if (!out.dim && take(s, pat)) out.dim = dim; });
     const beforeWhat = s.t;
     WHAT.forEach(([pat, code]) => { if (take(s, pat)) out.what.push(code); });
@@ -268,6 +320,8 @@
     // explicit mention question looks for terms in the whole question instead.
     if (out.mentionIntent && !out.mentionsAll.length) out.mentionsAll = findMentions(raw);
     out.raw = raw;
+    out.rest = s.t;                     // what was not read: consumed spans are masked with #
+    out.occupation = occ || null;
 
     if (/ who /.test(raw) && / (most|more|least|less|biggest|highest|lowest) /.test(raw)) out.intent = 'who';
     else if (/ which (group|groups|people) /.test(raw)) out.intent = 'who';
@@ -817,13 +871,33 @@
         barsHTML(top.map(t => ({ label: cap(DATA.measures[t.k]), v: t.v, hi: t.k === what })));
       return res;
     }
+    // A group with a clock hour or a day of the week: figures for groups are
+    // published only by part of the day and for weekdays and weekends.
+    if (who && when && when.kind === 'hour') {
+      const dp = dayPartOf(when.value);
+      res.notes.push('Figures for a group are published by part of the day, not by the hour, so this shows the whole ' + dp + ' (' + DAYPART_SPAN[dp] + ').');
+      when = { kind: 'daypart', value: dp, label: DAYPART_LABEL[dp] };
+    } else if (who && when && when.kind === 'wday') {
+      const wk = when.value === 0 || when.value === 6 ? 'weekend' : 'weekday';
+      res.notes.push('Figures for a group are published for weekdays and weekends, not day by day, so this shows ' + wk + 's as a whole.');
+      when = { kind: 'weekpart', value: wk, label: 'on ' + wk + 's' };
+    }
+    // Two groups can be compared over the whole year only.
+    if (who2 && when && (when.kind === 'daypart' || when.kind === 'weekpart')) {
+      res.notes.push('Two groups can be compared only over the whole year, so this shows ' + whoLabel(who) + ' ' + when.label + '.');
+      who2 = null;
+    }
     const m = what || why;
 
     // Nothing to measure.
     if (!m) {
-      if (who && when) return groupTimeTop(res, who, when);
+      if (who && when && groupTime(who.dim, who.level, when)) return groupTimeTop(res, who, when);
+      if (who && when) res.notes.push(GROUP_TIME_NOTE);
+      if (who2) return groupPairTop(res, who, who2);
       if (who) return groupTop(res, who);
       if (when) return timeTop(res, when);
+      // "What do people ask about?", or an occupation read as everyone ("what do nurses ask about?")
+      if (!P.dim && (P.occupation || / (what|how) (do|does|did) (people|americans|users|adults|folks|everyone|everybody|the public|you) (ask|use|talk|chat)/.test(P.raw))) return everyoneTop(res);
       if (P.dim) {
         res.title = 'Name a subject to see how it varies by ' + DATA.dims[P.dim].toLowerCase() + '.';
         res.body.push('For example: does health vary by ' + DATA.dims[P.dim].toLowerCase() + '?');
@@ -847,7 +921,7 @@
     if (who && when) {
       const c = groupTime(who.dim, who.level, when);
       if (!c) {
-        res.notes.push('Times can be combined with a group only as morning, afternoon, evening, night, weekdays or weekends; the time was left out.');
+        res.notes.push(GROUP_TIME_NOTE);
         when = null;
       } else {
         const v = val(c, m), base = val(cell(who.dim, who.level), m);
@@ -1005,9 +1079,39 @@
     res.chart = '<h3>Main subjects of conversations by ' + esc(whoLabel(who)) + '</h3><p class="abnote">Gray marks show everyone.</p>' + barsMarked(top.map(t => ({ label: cap(DATA.measures[t.k]), v: t.v, r: t.r })));
     return res;
   }
+  function everyoneTop(res) {
+    const top = topMeasures(everyone(), null, 8);
+    res.readAs = ['everyone', 'any subject', 'all year'];
+    res.title = 'People ask most about ' + andList(top.slice(0, 3).map(t => DATA.measures[t.k] + ' (' + pct(t.v) + ')')) + '.';
+    res.body.push('These are the most common main subjects across all conversations. Name a group of people or a time to see how it differs.');
+    res.chart = '<h3>Main subjects of all conversations</h3>' + barsHTML(top.map(t => ({ label: cap(DATA.measures[t.k]), v: t.v })));
+    res.more = [['What do women ask about?', 'What do women ask about?'], ['What do people ask about at night?', 'What do people ask about at night?'], ['Who asks about health the most?', 'Who asks about health the most?']];
+    return res;
+  }
+  // Two groups of the same kind ("women and men", "people in their twenties"):
+  // each group's main subjects, side by side.
+  function groupPairTop(res, a, b) {
+    const ca = cell(a.dim, a.level), cb = cell(b.dim, b.level), ref = everyone();
+    const okA = ca && ca.shown, okB = cb && cb.shown;
+    if (!okA || !okB) {
+      if (okA || okB) res.notes.push(cap(whoLabel(okA ? b : a)) + ' are too few to show, so this shows ' + whoLabel(okA ? a : b) + ' only.');
+      return groupTop(res, okA ? a : b);
+    }
+    const ta = topMeasures(ca, ref, 8), tb = topMeasures(cb, ref, 8);
+    const three = t => andList(t.slice(0, 3).map(x => DATA.measures[x.k] + ' (' + pct(x.v) + ')'));
+    res.readAs = [whoLabel(a) + ' and ' + whoLabel(b), 'any subject', 'all year'];
+    res.title = ta[0].k === tb[0].k
+      ? cap(whoLabel(a)) + ' and ' + whoLabel(b) + ' both ask most about ' + DATA.measures[ta[0].k] + ' (' + pct(ta[0].v) + ' and ' + pct(tb[0].v) + ').'
+      : cap(whoLabel(a)) + ' ask most about ' + DATA.measures[ta[0].k] + ' (' + pct(ta[0].v) + '); ' + whoLabel(b) + ', about ' + DATA.measures[tb[0].k] + ' (' + pct(tb[0].v) + ').';
+    res.body.push('The three largest subjects for ' + whoLabel(a) + ': ' + three(ta) + '.');
+    res.body.push('For ' + whoLabel(b) + ': ' + three(tb) + '.');
+    res.chart = [[a, ta], [b, tb]].map(([g, t]) => '<h3>Main subjects of conversations by ' + esc(whoLabel(g)) + '</h3><p class="abnote">Gray marks show everyone.</p>' +
+      barsMarked(t.map(x => ({ label: cap(DATA.measures[x.k]), v: x.v, r: x.r })))).join('');
+    return res;
+  }
   function groupTimeTop(res, who, when) {
     const c = groupTime(who.dim, who.level, when);
-    if (!c) { res.notes.push('Times can be combined with a group only as morning, afternoon, evening, night, weekdays or weekends; the time was left out.'); return groupTop(res, who); }
+    if (!c) { res.notes.push(GROUP_TIME_NOTE); return groupTop(res, who); }
     const ref = cell(who.dim, who.level);
     res.readAs = [whoLabel(who), 'any subject', when.label];
     if (!c.shown) { res.title = 'Too few conversations to say.'; return res; }

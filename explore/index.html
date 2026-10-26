@@ -190,6 +190,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
       <p class="sub" id="bars-sub"></p>
       <div class="bars" id="bars"></div>
       <p class="reflegend"><i></i><span id="reflabel"></span></p>
+      <div class="actions"><button class="btn" type="button" id="dl-bars" aria-label="Download this chart’s figures as a CSV file">Download CSV</button></div>
     </section>
     <section class="panel" aria-labelledby="words-h">
       <h2 id="words-h">In plain words</h2>
@@ -211,6 +212,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
     <p class="sub" id="heat-sub"></p>
     <div class="heat-scroll"><table class="heat" id="heat"></table></div>
     <div class="scale"><span>Half as often</span><span class="grad" aria-hidden="true"></span><span>Twice as often as everyone</span></div>
+    <div class="actions"><button class="btn" type="button" id="dl-heat" aria-label="Download this table’s figures as a CSV file">Download CSV</button></div>
   </section>
 
   <div class="notes">
@@ -227,6 +229,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
   </div>
 </footer>
 
+<script src="../assets/download.js"></script>
 <script>
 (function () {
   'use strict';
@@ -241,7 +244,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
   const oneIn = p => { const n = 100 / p, r = n < 20 ? Math.round(n) : n < 40 ? Math.round(n / 5) * 5 : Math.round(n / 10) * 10; return r <= 20 ? NUMWORD[r] : String(r); };
   const pct = v => v == null ? '–' : v.toFixed(1) + '%';
   const S = { dim: 'age', topic: 'health_medicine', m: 0 };
-  let D = null;
+  let D = null, POP = null;
 
   // a link can preselect the view: explore/?topic=money_shopping_finance&dim=income&m=1
   const P = new URLSearchParams(location.search);
@@ -260,6 +263,28 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
     sel.value = S.topic; sel.addEventListener('change', () => { S.topic = sel.value; render(); });
     document.querySelectorAll('#measure button').forEach(b => b.addEventListener('click', () => { S.m = +b.dataset.m; render(); }));
     document.getElementById('copy').addEventListener('click', () => { const txt = document.getElementById('words').textContent, c = document.getElementById('copied'); const done = () => { c.textContent = 'Copied'; setTimeout(() => { c.textContent = ''; }, 1600); }; try { navigator.clipboard.writeText(txt).then(done).catch(() => { selectWords(); c.textContent = 'Press Ctrl+C to copy'; }); } catch (e) { selectWords(); c.textContent = 'Press Ctrl+C to copy'; } });
+    document.getElementById('dl-bars').addEventListener('click', saveBars);
+    document.getElementById('dl-heat').addEventListener('click', saveHeat);
+  }
+
+  // The CSV files: what the chart or the table shows, one row per figure, at the page's one decimal.
+  const WITHHELD = 'Withheld: too few conversations, or a handful of people, stand behind this figure';
+  const MEASURE = () => S.m === 0 ? 'Share of conversations' : 'Share of people';
+  const csvName = what => 'state-of-the-prompt_' + what + '_by-' + S.dim + '_' + PromptCSV.slug(MEASURE()) + '.csv';
+  const fig = v => v == null ? null : v.toFixed(1);
+  function saveBars() {
+    const dimName = DIMS.find(d => d[0] === S.dim)[1], subj = cap(LAB[S.topic]);
+    const rows = [[subj, dimName, 'Everyone', MEASURE(), fig(D.overall[S.topic][S.m]), POP ? POP.people : null, POP ? POP.conversations : null, null]]
+      .concat(D.dims[S.dim].map(l => { const v = l.v[S.topic][S.m]; return [subj, dimName, LV[l.level], MEASURE(), fig(v), l.people, l.convs, v == null ? WITHHELD : null]; }));
+    PromptCSV.save(csvName(PromptCSV.slug(LAB[S.topic])), ['Subject', 'Compared by', 'Group', 'Measure', 'Percent', 'People in group', 'Conversations in group', 'Note'], rows);
+  }
+  function saveHeat() {
+    const dimName = DIMS.find(d => d[0] === S.dim)[1], rows = [];
+    Object.keys(LAB).sort((a, b) => D.overall[b][0] - D.overall[a][0]).forEach(t => {
+      rows.push([cap(LAB[t]), dimName, 'Everyone', MEASURE(), fig(D.overall[t][S.m]), null]);
+      D.dims[S.dim].forEach(l => { const v = l.v[t][S.m]; rows.push([cap(LAB[t]), dimName, LV[l.level], MEASURE(), fig(v), v == null ? WITHHELD : null]); });
+    });
+    PromptCSV.save(csvName('all-subjects'), ['Subject', 'Compared by', 'Group', 'Measure', 'Percent', 'Note'], rows);
   }
   function selectWords() { const r = document.createRange(); r.selectNodeContents(document.getElementById('words')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
 
@@ -317,7 +342,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 22px
     fetch('../data/site.json').then(r => r.ok ? r.json() : null).catch(() => null)
   ]).then(([d, site]) => {
     D = d;
-    if (site) document.getElementById('n-people').textContent = site.population.people.toLocaleString('en-US');
+    if (site) { POP = site.population; document.getElementById('n-people').textContent = site.population.people.toLocaleString('en-US'); }
     init(); render();
   }).catch(() => { document.getElementById('words').textContent = 'The figures could not be loaded. Reload the page to try again.'; });
 })();

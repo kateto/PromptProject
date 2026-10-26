@@ -74,6 +74,8 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
 .how h2 { font-family: var(--sans); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--ink-3); margin-bottom: 10px; }
 .how p { font-size: 14.5px; color: var(--ink-2); margin-bottom: 10px; max-width: 46em; }
 .empty { font-size: 15px; color: var(--ink-2); }
+.dlrow { margin-top: 14px; }
+.dlrow .btn { font-size: 13.5px; padding: 6px 12px; }
 #chart { overflow-x: auto; }
 @media (max-width: 640px) {
   .grow { grid-template-columns: minmax(0, 96px) minmax(0, 1fr); gap: 8px; }
@@ -128,16 +130,19 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     <h2 id="c-h">Mentions per 1,000 conversations, by month</h2>
     <p class="note" id="c-note">How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.</p>
     <div id="chart"><p class="empty">Add a term above to begin.</p></div>
+    <div class="dlrow" hidden><button class="btn" type="button" id="dl-month" aria-label="Download the monthly figures as a CSV file">Download CSV</button></div>
   </section>
   <section class="panel" aria-labelledby="t-h">
     <h2 id="t-h">Over the whole year</h2>
     <div class="tablewrap" id="table"></div>
+    <div class="dlrow" hidden><button class="btn" type="button" id="dl-year" aria-label="Download this table as a CSV file">Download CSV</button></div>
   </section>
   <section class="panel" aria-labelledby="g-h">
     <h2 id="g-h">Who mentions them</h2>
     <p class="note" id="g-note"></p>
     <div class="gsel" id="gsel" role="group" aria-label="Compare by"></div>
     <div id="groups"></div>
+    <div class="dlrow" hidden><button class="btn" type="button" id="dl-groups" aria-label="Download the figures by group as a CSV file">Download CSV</button></div>
   </section>
   <section class="panel" aria-labelledby="b-h">
     <h2 id="b-h">Our list of terms</h2>
@@ -163,6 +168,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
 </footer>
 
 <script src="../assets/ask.js"></script>
+<script src="../assets/download.js"></script>
 <script>
 (function () {
   'use strict';
@@ -183,6 +189,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
   const pc = v => v == null ? 'not shown' : (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%';
   const pcAxis = v => (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%';
   let M = null, byName = {}, sel = [], dim = 'age', meas = 'conv';
+  let shown = null;    // the terms, their files and the measure currently drawn, for the CSV downloads
   const charted = t => t.mo == null || t.mo >= MIN_MONTHS;    // no count (older data) means chartable
 
   function setMsg(s) { document.getElementById('msg').textContent = s || ''; }
@@ -237,12 +244,16 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     chips.innerHTML = sel.map((id, i) => '<span class="chip"><i style="background:' + COLORS[i] + '"></i>' + esc(M.byId[id].name) +
       '<button type="button" aria-label="Remove ' + esc(M.byId[id].name) + '" data-rm="' + id + '">×</button></span>').join('');
     chips.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => remove(b.dataset.rm)));
+    shown = null;
+    document.querySelectorAll('.dlrow').forEach(d => { d.hidden = true; });
     if (!sel.length) {
       document.getElementById('chart').innerHTML = '<p class="empty">Add a term above to begin.</p>';
       document.getElementById('table').innerHTML = ''; document.getElementById('groups').innerHTML = ''; document.getElementById('gsel').innerHTML = '';
       return;
     }
-    Promise.all(sel.map(A.loadTerm)).then(ds => {
+    const asked = sel.slice();
+    Promise.all(asked.map(A.loadTerm)).then(ds => {
+      if (asked.join() !== sel.join() || people !== (meas === 'people')) return;   // the view changed while the files loaded; its own draw follows
       const months = A.months();
       const series = sel.map((id, i) => ({ name: M.byId[id].name, values: months.map(k => ds[i] ? (people ? (ds[i].month_pp || {})[k] : ds[i].month[k]) : null),
         low: months.map(k => !!(ds[i] && (ds[i].month_low || []).includes(k))), held: months.map(k => !!(ds[i] && (ds[i].month_held || []).includes(k))) }));
@@ -253,18 +264,61 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
         '>People who mentioned it</th><th>Conversations per person</th><th>Peak month</th></tr></thead><tbody>';
       sel.forEach((id, i) => {
         const t = M.byId[id], d = ds[i];
-        let peak = '–';
-        if (d) {
-          const src = people ? (d.month_pp || {}) : d.month;
-          const mv = months.filter(k => src[k] != null);
-          if (mv.length) peak = A.monthName(mv.reduce((a, b) => (src[b] > src[a] ? b : a)));
-        }
+        const peak = peakOf(d, people) || '–';
         h += '<tr><td><i style="background:' + COLORS[i] + '"></i>' + esc(t.name) + '</td><td' + (people ? '' : ' class="on"') + '>' + A.fmtK(t.per1000) +
           '</td><td' + (people ? ' class="on"' : '') + '>' + pc(t.pp) + '</td><td>' + t.cpp.toFixed(1) + '</td><td>' + esc(peak) + '</td></tr>';
       });
       document.getElementById('table').innerHTML = h + '</tbody></table>';
       drawGroups(ds);
+      shown = { ids: asked, ds, people };
+      document.querySelectorAll('.dlrow').forEach(d => { d.hidden = false; });
     });
+  }
+  function peakOf(d, people) {          // the month with the highest published figure, by name
+    if (!d) return null;
+    const src = people ? (d.month_pp || {}) : d.month, mv = A.months().filter(k => src[k] != null);
+    return mv.length ? A.monthName(mv.reduce((a, b) => (src[b] > src[a] ? b : a))) : null;
+  }
+
+  // The CSV files: what each panel shows, one row per figure, with the figures as published.
+  const MEAS_NAME = p => p ? 'Share of people who mentioned it (%)' : 'Mentions per 1,000 conversations';
+  const TOO_FEW = 'Too few to publish: too few conversations mention it, or a handful of people supply most of them';
+  const csvName = (what, people) => 'state-of-the-prompt_mentions_' + shown.ids.join('_') + '_' + what + '_' + PromptCSV.slug(people ? 'share of people' : 'per 1000 conversations') + '.csv';
+  function saveMonths() {
+    if (!shown) return;
+    const people = shown.people, floor = A.monthFloors(people ? 'people' : 'conv'), rows = [];
+    const meas = people ? 'Share of that month’s users who mentioned it (%)' : MEAS_NAME(false);
+    shown.ids.forEach((id, i) => {
+      const d = shown.ds[i];
+      A.months().forEach((k, j) => {
+        const v = d ? (people ? (d.month_pp || {})[k] : d.month[k]) : null;
+        const low = !!(d && (d.month_low || []).includes(k)), held = !!(d && (d.month_held || []).includes(k));
+        const bound = low && floor && floor[j] != null ? Math.ceil(floor[j] * 1e4) / 1e4 : null;   // the top of the hatched band, rounded up
+        const note = v != null ? null : low ? 'Too few mentions to publish; the true value is below the upper bound'
+          : held ? 'Withheld: too few people, or a handful of people supply most of the mentions' : 'Not published';
+        rows.push([M.byId[id].name, k, meas, v, bound, note]);
+      });
+    });
+    PromptCSV.save(csvName('by-month', people), ['Term', 'Month', 'Measure', 'Value', 'Upper bound', 'Note'], rows);
+  }
+  function saveYear() {
+    if (!shown) return;
+    const rows = shown.ids.map((id, i) => {
+      const t = M.byId[id];
+      return [t.name, t.per1000, t.pp, t.cpp, peakOf(shown.ds[i], shown.people), t.pp == null ? 'Share of people not published' : null];
+    });
+    const peakHead = 'Peak month (' + (shown.people ? 'share of people' : 'per 1,000 conversations') + ')';
+    PromptCSV.save(csvName('whole-year', shown.people), ['Term', 'Mentions per 1,000 conversations', 'People who mentioned it (%)', 'Conversations per person', peakHead, 'Note'], rows);
+  }
+  function saveGroups() {
+    if (!shown) return;
+    const people = shown.people, field = people ? 'pp' : 'per1000', dimName = DIMS.find(x => x[0] === dim)[1];
+    const first = shown.ds.find(d => d), levels = first ? first.groups[dim].map(c => c.level) : [], rows = [];
+    levels.forEach(lv => shown.ids.forEach((id, i) => {
+      const c = shown.ds[i] && shown.ds[i].groups[dim].find(x => x.level === lv), v = c ? c[field] : null;
+      rows.push([M.byId[id].name, dimName, lab(dim, lv), MEAS_NAME(people), v, v == null ? TOO_FEW : null]);
+    }));
+    PromptCSV.save(csvName('by-' + dim, people), ['Term', 'Compared by', 'Group', 'Measure', 'Value', 'Note'], rows);
   }
   function drawGroups(ds) {
     const people = meas === 'people', field = people ? 'pp' : 'per1000', fmt = people ? pc : A.fmtK;
@@ -344,6 +398,9 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
       add(id); inp.value = '';
     });
     document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { meas = b.dataset.m; draw(); }));
+    document.getElementById('dl-month').addEventListener('click', saveMonths);
+    document.getElementById('dl-year').addEventListener('click', saveYear);
+    document.getElementById('dl-groups').addEventListener('click', saveGroups);
     document.querySelectorAll('[data-ex]').forEach(a => {
       const ids = a.dataset.ex.split('|').map(n => byName[n.toLowerCase()]).filter(id => id && charted(M.byId[id]));
       a.href = '?t=' + ids.join(',');
