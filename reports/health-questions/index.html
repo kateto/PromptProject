@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What People Ask ChatGPT About Their Health · State of the Prompt</title>
+<meta name="description" content="A closer look at health conversations on ChatGPT: a health classifier read every conversation. What kinds of question people ask, who asks, and who the question is about.">
+<meta property="og:site_name" content="State of the Prompt">
+<meta property="og:type" content="article">
+<meta property="og:title" content="What People Ask ChatGPT About Their Health">
+<meta property="og:description" content="A closer look at health conversations on ChatGPT: what kinds of question people ask, who asks, and who the question is about.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../assets/report.css">
+<style>
+/* controls and readouts for the interactive figures on this page */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.chip { font: 500 13px var(--sans); padding: 5px 12px; border-radius: 999px; border: 1px solid var(--rule); background: #fff; color: var(--ink); cursor: pointer; }
+.chip:hover { border-color: var(--ink-3); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.article .readout { font-size: 13px; line-height: 1.4; color: var(--ink-2); min-height: 1.4em; margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.brow:hover .fill { filter: brightness(0.85); }
+.pairs { display: grid; gap: 10px; }
+.prow { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr) 96px; gap: 12px; align-items: center; font-size: 14px; }
+.prow .lab { text-align: right; line-height: 1.25; overflow-wrap: anywhere; }
+.prow .tr { display: grid; gap: 3px; }
+.prow .tr span { display: block; height: 10px; border-radius: 2px; }
+.prow .a { background: var(--data-red); } .prow .b { background: var(--data-blue); }
+.prow .v { font-variant-numeric: tabular-nums; line-height: 1.25; }
+.prow .v i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.pkey { display: flex; gap: 16px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+.pkey i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.cols svg { width: 100%; display: block; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 18px 0 6px; }
+.stat { background: var(--mist); border-radius: 8px; padding: 16px 18px; }
+.stat b { display: block; font-family: var(--serif); font-size: 34px; line-height: 1.05; font-weight: 500; }
+.stat span { display: block; font-size: 13.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.4; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0 8px; }
+.card { background: var(--mist); border-radius: 8px; padding: 14px 16px; }
+.card b { display: block; font-family: var(--sans); font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.article .card p { font-size: 14px; line-height: 1.5; margin: 0; }
+.dl { font: 500 12px var(--sans); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--rule); background: #fff; color: var(--ink-2); cursor: pointer; margin-top: 10px; }
+.dl:hover { border-color: var(--ink-3); color: var(--ink); }
+.note { font-size: 14px; color: var(--ink-2); border-left: 3px solid var(--glow); padding: 4px 0 4px 12px; margin: 14px 0; }
+@media (max-width: 700px) { .prow { grid-template-columns: minmax(0, 120px) minmax(0, 1fr) 84px; gap: 8px; } .stat b { font-size: 28px; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="../../" aria-label="State of the Prompt, home">
+      <img src="../../assets/logo.svg" width="30" height="30" alt="">
+      State of the Prompt
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="../../#insights">Insights</a><a href="../" aria-current="page">Reports</a><a href="../../explore/">Explore</a><a href="../../ask/">Ask</a><a href="../../trends/">Trends</a><a href="../../about/">About</a><a href="../../about/#team">Team</a><a href="../../about/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<header class="mast" id="top">
+  <div class="wrap">
+    <p class="crumb"><a href="../">Reports</a> / Health, a closer look</p>
+    <p class="kicker">Companion to Report 1 · October 2026</p>
+    <h1>What people ask ChatGPT about their health</h1>
+    <p class="dek">A health classifier read every conversation, not just those filed under the health subject. One conversation in five is about health once emotional support counts. This companion looks at what kinds of question people ask, who asks, and who the question is about.</p>
+    <p class="byline">State of the Prompt project team · Rutgers University</p>
+    <div class="btns">
+      <button class="btn" type="button" id="cite">Cite this report</button>
+      <span class="btn-note" id="btnnote" aria-live="polite"></span>
+    </div>
+
+    <div class="takeaways">
+      <h2>Key takeaways</h2>
+      <ul>
+        <li><b>1 in 5</b><span>conversations is about health when a classifier reads every one (22%), against 1 in 10 filed mainly under health in Report 1.</span></li>
+        <li><b>20%</b><span>of health conversations are emotional support, the largest single kind; the classic symptom or condition question is a quarter.</span></li>
+        <li><b>25%</b><span>of women’s conversations are about health, against 15% of men’s. Women ask the clinical and emotional questions, men the informational and fitness ones.</span></li>
+        <li><b>2.6×</b><span>mothers ask about a child’s health 2.6 times as often as fathers, comparing parents with parents.</span></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="In this report">
+    <p>In this report</p>
+    <ol>
+      <li><a href="#how-much">How much is about health</a></li>
+      <li><a href="#kinds">What kinds of question</a></li>
+      <li><a href="#who">Who asks</a></li>
+      <li><a href="#about">Who the question is about</a></li>
+      <li><a href="#gradients">Income and education</a></li>
+      <li><a href="#stage">Life stage</a></li>
+      <li><a href="#how">How people ask</a></li>
+      <li><a href="#data">About the data</a></li>
+    </ol>
+  </nav>
+
+  <article class="article">
+    <section id="how-much">
+      <h2>How much is about health</h2>
+      <p>Report 1 counts conversations whose main subject is health and medicine: one in ten. This companion asks a broader question of every conversation with readable text: is it about health at all, including emotional support, diet and fitness, and finding care? Two model checks have to agree before a conversation counts.</p>
+      <div class="stats">
+        <div class="stat"><b id="s-health">797,000</b><span>health conversations, out of 3.64 million checked one by one</span></div>
+        <div class="stat"><b>22%</b><span>of all readable conversations; 17.5% without emotional support</span></div>
+        <div class="stat"><b id="s-people">44,556</b><span>people had at least one health conversation</span></div>
+      </div>
+      <p class="note">The two measures are not interchangeable. Report 1 reads the main subject of a conversation; this page reads whether health comes into it at all. Both are shown on this site, each with its own definition.</p>
+    </section>
+
+    <section id="kinds">
+      <h2>What kinds of question</h2>
+      <p>Each health conversation was sorted into one of twelve kinds, message by message, with the conversation taking the majority. Emotional support is the largest kind. The classic case, a symptom right now or a diagnosed condition, is about a quarter. Switch between everyone, women and men to see how the mix changes.</p>
+      <figure>
+        <h3>Kinds of health conversation</h3>
+        <p class="fsub">Share of health conversations, %</p>
+        <div class="chips" id="c-kinds" role="group" aria-label="Show kinds for"></div>
+        <div class="bars" id="f-kinds"></div>
+        <figcaption id="f-kinds-cap">All health conversations. The six largest kinds are shown for women and men.</figcaption>
+        <button class="dl" type="button" id="dl-kinds">Download CSV</button>
+      </figure>
+      <p>The questions change with age. Emotional support falls away after 55, while general information and the practical questions about finding care, paperwork and insurance rise. Studying is a young person’s use. Pick a kind to see its share in each age group; hover a column for the value.</p>
+      <figure class="cols">
+        <h3>Kinds of question by age</h3>
+        <p class="fsub">Share of each age group’s health conversations, %</p>
+        <div class="chips" id="c-age" role="group" aria-label="Kind of question"></div>
+        <svg id="f-age" viewBox="0 0 700 220" role="img" aria-label="Share of each age group's health conversations for the chosen kind of question"></svg>
+        <p class="readout" id="r-age"></p>
+        <button class="dl" type="button" id="dl-age">Download CSV</button>
+      </figure>
+    </section>
+
+    <section id="who">
+      <h2>Who asks</h2>
+      <p>Women’s conversations are about health almost twice as often as men’s, and the gap holds after adjusting for age, income, education, employment, ethnicity, region and children. By age, health use peaks at 25 to 34. Income makes no difference to how much people use ChatGPT for health, and education very little; what they do shape is the kind of question, two sections on. Choose a kind of group.</p>
+      <figure>
+        <h3>Share of each group’s conversations that are about health</h3>
+        <p class="fsub">Health as a share of all the group’s readable conversations, %</p>
+        <div class="chips" id="c-who" role="group" aria-label="Kind of group"></div>
+        <div class="bars" id="f-who"></div>
+        <figcaption>Everyone: 22.0%. Adults only; the panel is not a random sample of the country, so read the figures as comparisons between groups.</figcaption>
+        <button class="dl" type="button" id="dl-who">Download CSV</button>
+      </figure>
+      <p>Men and women ask about different things. Women’s questions are clinical and emotional; men’s are informational and about fitness. Adjusted for everything else, a woman’s health conversation is 1.4 times as likely to be about her own symptoms or a condition, and about two thirds as likely to be about diet and fitness or general information. Women also come back more: 20 health conversations per health user against 13 for men.</p>
+      <figure>
+        <h3>Kinds of question, women and men</h3>
+        <p class="fsub">Share of each group’s health conversations, %</p>
+        <div class="pairs" id="f-gender"></div>
+        <p class="pkey"><span><i style="background:var(--data-red)"></i>Women</span><span><i style="background:var(--data-blue)"></i>Men</span></p>
+        <button class="dl" type="button" id="dl-gender">Download CSV</button>
+      </figure>
+    </section>
+
+    <section id="about">
+      <h2>Who the question is about</h2>
+      <p>Half of health conversations are about the user. Three in ten are impersonal: how insulin works, what a test measures. One in seven is about another adult, a partner, parent or friend, and often it is the emotional side of that relationship rather than that person’s care. One in fourteen is about the user’s child or dependent.</p>
+      <figure>
+        <h3>Who the health question is about</h3>
+        <p class="fsub">Share of health conversations</p>
+        <div class="stack" id="f-about" role="img" aria-label="49 percent about the user, 29 percent nobody in particular, 15 percent someone else, 7 percent their child or dependent"></div>
+        <div class="stack-key" id="f-about-key"></div>
+        <figcaption>Among 796,664 health conversations, that is about 56,000 about a child and 119,000 about another adult.</figcaption>
+      </figure>
+      <p>Health care for children in these households is being routed through ChatGPT, mostly by mothers. Women with children at home ask about a child in 12% of their health conversations, men with children at home in under 5%. The gap holds in every age band, every income and education level, every employment status, every region and every ethnicity; the ratio never drops below 1. Choose a view.</p>
+      <figure>
+        <h3>Health conversations about a child or dependent</h3>
+        <p class="fsub">Share of the group’s health conversations, %</p>
+        <div class="chips" id="c-child" role="group" aria-label="View"></div>
+        <div id="f-child"></div>
+        <p class="readout" id="r-child"></p>
+        <figcaption id="f-child-cap"></figcaption>
+        <button class="dl" type="button" id="dl-child">Download CSV</button>
+      </figure>
+    </section>
+
+    <section id="gradients">
+      <h2>Income and education</h2>
+      <p>Income does not change how much people use ChatGPT for health, but it changes what they bring to it. Emotional support falls steadily as income rises, and diet and fitness questions rise in its mirror image. Symptom and condition questions stay within about two points across all six income bands: income reshapes the emotional and lifestyle ends of health use and leaves the clinical middle alone. Education shows the same gradient in emotional support.</p>
+      <figure>
+        <h3>Where the gradient is</h3>
+        <p class="fsub">Share of the group’s health conversations, %</p>
+        <div class="chips" id="c-grad" role="group" aria-label="Measure"></div>
+        <div class="bars" id="f-grad"></div>
+        <figcaption id="f-grad-cap"></figcaption>
+        <button class="dl" type="button" id="dl-grad">Download CSV</button>
+      </figure>
+    </section>
+
+    <section id="stage">
+      <h2>Life stage shows in the questions</h2>
+      <p>Employment, relationship status and children at home each leave a mark on what people ask.</p>
+      <div class="cards" id="f-stage"></div>
+    </section>
+
+    <section id="how">
+      <h2>How people ask</h2>
+      <p>People describe the symptom; they rarely ask whether to see a doctor. “My throat hurts” and “it’s been swollen for days” outnumber “should I see a doctor” three to one. People hand ChatGPT the symptom and let it decide what to do with it. A tool that only triggers on “should I see a doctor” would miss most of what is going on.</p>
+      <div class="stats">
+        <div class="stat"><b>42</b><span>characters in the median symptom message, about the length of “I have had a headache and nausea since yesterday”</span></div>
+        <div class="stat"><b>3 : 1</b><span>statements to questions in symptom conversations</span></div>
+        <div class="stat"><b>3.4×</b><span>medication and dosage phrasing is 3.4 times as common in symptom conversations as elsewhere</span></div>
+        <div class="stat"><b>1 in 45</b><span>symptom messages is about someone else: a child, a parent, a partner, a pet</span></div>
+      </div>
+    </section>
+
+    <section id="data">
+      <h2>About the data</h2>
+      <div class="method">
+        <p>Every conversation with at least one message and reply in text went through the same two steps, run by an open language model (Gemma 3, 27B) on Rutgers’ cluster, so no conversation text left it. First, a yes-or-no check: is this about health? Second, a classifier of twelve kinds of health use, applied message by message, with the conversation taking the majority. A conversation counts as health only when both agree. Image-only conversations, about 200,000, cannot be read and are left out.</p>
+        <p>This page covers adults only: conversations by panelists 18 or older. Figures by age, gender, income, education, employment and parenthood use each person’s self-reported profile. Shares are of conversations unless noted, so people who use ChatGPT heavily count for more. The panel is not a random sample of the country, so the figures are best read as comparisons between groups.</p>
+        <p>The definition here differs from Report 1, which uses the main subject assigned to each conversation from a list of 28. Both are published on this site with their definitions stated. “Health” here means two model checks agree; a human check of the definition is in progress.</p>
+        <p><strong>Suggested citation:</strong> Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., &amp; Shugars, S. (2026). <em>What people ask ChatGPT about their health</em> (State of the Prompt, companion to Report No. 1). Rutgers University.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="rel-h">
+      <h2 id="rel-h">Keep exploring</h2>
+      <div class="related">
+        <a class="rel" href="../health/"><small>Report 1</small><b>What Americans ask ChatGPT about health</b></a>
+        <a class="rel" href="../../ask/?q=Who%20asks%20about%20health%20the%20most%3F"><small>Ask the data</small><b>Who asks about health the most?</b></a>
+      </div>
+    </section>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>State of the Prompt · Rutgers University, School of Communication and Information</span>
+    <span><a href="../../about/">About</a> · <a href="../">Reports</a> · <a href="../../ask/">Ask the data</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/report.js"></script>
+<script src="../../assets/download.js"></script>
+<script>
+(function () {
+  'use strict';
+  const R = window.Report, CSV = window.PromptCSV;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const AGE = { '18-24': '18–24', '25-34': '25–34', '35-44': '35–44', '45-54': '45–54', '55+': '55 and over' };
+  const INC = { 'Under $25,000': 'Under $25k', '$25,000 to $34,999': '$25k–35k', '$35,000 to $49,999': '$35k–50k', '$50,000 to $74,999': '$50k–75k', '$75,000 to $99,999': '$75k–100k', '$100,000 or more': '$100k and over' };
+  const lab = s => AGE[s] || INC[s] || s;
+  R.cite('cite', 'btnnote', 'Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., & Shugars, S. (2026). What people ask ChatGPT about their health (State of the Prompt, companion to Report No. 1). Rutgers University.');
+
+  /* a row of chips; fn(value) runs on each pick, and on the first */
+  function chips(id, items, fn) {
+    const el = document.getElementById(id);
+    el.innerHTML = items.map(([v, l], i) => '<button class="chip" type="button" data-v="' + esc(v) + '" aria-pressed="' + (i === 0) + '">' + esc(l) + '</button>').join('');
+    el.addEventListener('click', ev => { const b = ev.target.closest('.chip'); if (!b) return; el.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === b)); fn(b.dataset.v); });
+    fn(items[0][0]);
+  }
+  function csv(btnId, name, header, rowsFn) { document.getElementById(btnId).addEventListener('click', () => CSV.save(name, header, rowsFn())); }
+
+  /* grouped bars, two series per row */
+  function pairs(id, labels, a, b, names) {
+    const max = Math.max(...a, ...b) * 1.08;
+    document.getElementById(id).innerHTML = labels.map((l, i) => '<div class="prow"><span class="lab">' + esc(l) + '</span><span class="tr"><span class="a" style="width:' + (a[i] / max * 100).toFixed(1) + '%"></span><span class="b" style="width:' + (b[i] / max * 100).toFixed(1) + '%"></span></span><span class="v"><i style="background:var(--data-red)"></i>' + a[i].toFixed(1) + '%<br><i style="background:var(--data-blue)"></i>' + b[i].toFixed(1) + '%</span></div>').join('');
+  }
+
+  /* columns with every value labelled; hovering a column writes its value in the readout; series: [{name, values, color}] */
+  function columns(svgId, readId, labels, series, opt) {
+    const svg = document.getElementById(svgId), out = document.getElementById(readId), mk = R.svg(svg), W = R.width(svg, 700), H = 220, L = 40, Rr = 12, T = 22, B = 34;
+    const font = 'Public Sans, Arial, sans-serif', n = labels.length, k = series.length;
+    const hi = (opt && opt.max) || Math.max(...series.flatMap(s => s.values)) * 1.25, lo = 0;
+    const y = v => T + (hi - v) / (hi - lo) * (H - T - B), slot = (W - L - Rr) / n, bw = Math.min(56, slot * 0.7 / k), gap = 3;
+    svg.innerHTML = ''; svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const step = hi > 30 ? 10 : hi > 12 ? 5 : 2;
+    for (let v = 0; v <= hi; v += step) { mk('line', { x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: '#e1e1e1' }); mk('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#6b6b6b', 'font-family': font }, v + '%'); }
+    labels.forEach((l, i) => {
+      const cx = L + slot * (i + 0.5);
+      mk('text', { x: cx, y: H - 12, 'text-anchor': 'middle', 'font-size': 12, fill: '#6b6b6b', 'font-family': font }, lab(l));
+      series.forEach((s, j) => {
+        const x = cx - (k * bw + (k - 1) * gap) / 2 + j * (bw + gap), v = s.values[i];
+        const r = mk('rect', { x: x.toFixed(1), y: y(v).toFixed(1), width: bw.toFixed(1), height: (y(0) - y(v)).toFixed(1), fill: s.color, rx: 2, tabindex: 0 });
+        mk('text', { x: (x + bw / 2).toFixed(1), y: (y(v) - 5).toFixed(1), 'text-anchor': 'middle', 'font-size': 11, fill: '#13233a', 'font-family': font }, v.toFixed(1));
+        const text = lab(l) + ': ' + (k > 1 ? s.name + ' ' : '') + v.toFixed(1) + '%' + (k > 1 ? series.filter(t => t !== s).map(t => ' · ' + t.name + ' ' + t.values[i].toFixed(1) + '%').join('') : '');
+        const show = () => { out.textContent = text; svg.querySelectorAll('rect').forEach(q => q.style.opacity = q === r ? '1' : '0.55'); };
+        const hide = () => { out.textContent = opt && opt.idle ? opt.idle : ''; svg.querySelectorAll('rect').forEach(q => q.style.opacity = '1'); };
+        r.addEventListener('mouseenter', show); r.addEventListener('focus', show); r.addEventListener('mouseleave', hide); r.addEventListener('blur', hide);
+      });
+    });
+    out.textContent = opt && opt.idle ? opt.idle : '';
+  }
+
+  R.load('../../data/report_health_kinds.json').then(d => {
+    document.getElementById('s-health').textContent = d.overview.health.toLocaleString('en-US');
+    document.getElementById('s-people').textContent = d.overview.people.toLocaleString('en-US');
+
+    // kinds, for everyone, women or men
+    const KG = d.kinds_by_gender;
+    let kindRows = d.kinds;
+    chips('c-kinds', [['all', 'Everyone'], ['Women', 'Women'], ['Men', 'Men']], v => {
+      kindRows = v === 'all' ? d.kinds : KG.labels.map((l, i) => [l, KG[v][i]]);
+      R.bars('f-kinds', kindRows.map(([l, x], i) => [esc(l), x, i === 0 ? 'hi' : '']), { max: 26 });
+      document.getElementById('f-kinds-cap').textContent = v === 'all' ? 'All health conversations. The six largest kinds are shown for women and men.' : 'Health conversations by ' + v.toLowerCase() + ', the six largest kinds.';
+    });
+    csv('dl-kinds', 'health-kinds-of-question.csv', ['kind', 'share_of_health_conversations_pct'], () => kindRows);
+
+    // kinds by age: one kind at a time
+    const KA = d.kinds_by_age, kindNames = Object.keys(KA.series);
+    let ageKind = kindNames[0];
+    const drawAge = () => columns('f-age', 'r-age', KA.ages, [{ name: ageKind, values: KA.series[ageKind], color: '#b00b33' }], { max: 25, idle: 'Hover a column for its value.' });
+    chips('c-age', kindNames.map(k => [k, k]), v => { ageKind = v; drawAge(); });
+    R.onWidth(drawAge);
+    csv('dl-age', 'health-kinds-by-age.csv', ['kind', 'age', 'share_of_health_conversations_pct'], () => kindNames.flatMap(k => KA.ages.map((a, i) => [k, a, KA.series[k][i]])));
+
+    // who asks: health share by kind of group
+    let whoRows = [];
+    chips('c-who', [['gender', 'Gender'], ['age', 'Age'], ['employment', 'Employment'], ['income', 'Household income'], ['education', 'Education']], v => {
+      whoRows = d.share_by[v];
+      const m = Math.max(...whoRows.map(r => r[1]));
+      R.bars('f-who', whoRows.map(([l, x]) => [esc(lab(l)), x, x === m ? 'hi' : '']), { max: 30 });
+    });
+    csv('dl-who', 'health-share-by-group.csv', ['group_kind', 'group', 'health_share_of_conversations_pct'], () => Object.entries(d.share_by).flatMap(([k, rows]) => rows.map(([l, x]) => [k, l, x])));
+
+    // kinds by gender, paired
+    pairs('f-gender', KG.labels, KG.Women, KG.Men, ['Women', 'Men']);
+    csv('dl-gender', 'health-kinds-women-men.csv', ['kind', 'women_pct', 'men_pct'], () => KG.labels.map((l, i) => [l, KG.Women[i], KG.Men[i]]));
+
+    // who it is about
+    const AB = { 'Themselves': ['#b00b33', '#fff'], 'Nobody in particular': ['#0e77a4', '#fff'], 'Someone else': ['#858585', '#fff'], 'Their child or dependent': ['#c99a2e', '#13233a'] };
+    R.stack('f-about', 'f-about-key', d.about.map(([l, v]) => [l, v, AB[l][0], AB[l][1]]));
+
+    // about a child: three views
+    const box = document.getElementById('f-child'), cap = document.getElementById('f-child-cap'), read = document.getElementById('r-child');
+    let childRows = [];
+    const drawChild = v => {
+      read.textContent = '';
+      if (v === 'parenthood') { box.innerHTML = '<div class="bars" id="f-child-b"></div>'; childRows = d.child_by_parenthood; R.bars('f-child-b', childRows.map(([l, x], i) => [esc(l), x, i === 0 ? 'hi' : '']), { max: 14 }); cap.textContent = 'Comparing parents with parents, the gap is 2.6 to 1. Homemakers are the highest group at 14.0%.'; }
+      else if (v === 'home') { box.innerHTML = '<div class="bars" id="f-child-b"></div>'; childRows = d.child_by_children_at_home; R.bars('f-child-b', childRows.map(([l, x], i) => [esc(l), x, i === 0 ? 'hi' : '']), { max: 14 }); cap.textContent = 'The panel independently reports whether each person has children at home; the classifier never saw this variable.'; }
+      else { box.innerHTML = '<svg id="f-child-s" viewBox="0 0 700 220" role="img" aria-label="Share of health conversations about a child, women and men, by age"></svg>'; const C = d.child_by_age_gender; childRows = C.ages.flatMap((a, i) => [[a + ', women', C.Women[i]], [a + ', men', C.Men[i]]]); columns('f-child-s', 'r-child', C.ages, [{ name: 'Women', values: C.Women, color: '#b00b33' }, { name: 'Men', values: C.Men, color: '#0e77a4' }], { max: 14, idle: 'Hover a column for its value.' }); cap.textContent = 'The ratio is about 3 to 1 from 18 to 34. Within homemakers it is 1.7, but both parents are high: 14.2% of women’s and 8.5% of men’s conversations.'; }
+    };
+    let childView = 'parenthood';
+    chips('c-child', [['parenthood', 'By gender and children'], ['age', 'By age, women and men'], ['home', 'By children at home']], v => { childView = v; drawChild(v); });
+    R.onWidth(() => { if (childView === 'age') drawChild('age'); });
+    csv('dl-child', 'health-about-a-child.csv', ['group', 'share_of_health_conversations_pct'], () => childRows);
+
+    // gradients
+    let gradRows = [];
+    chips('c-grad', [['ei', 'Emotional support, by income'], ['di', 'Diet and fitness, by income'], ['ee', 'Emotional support, by education']], v => {
+      gradRows = v === 'ei' ? d.emotional_by_income : v === 'di' ? d.diet_by_income : d.emotional_by_education;
+      const m = Math.max(...gradRows.map(r => r[1]));
+      R.bars('f-grad', gradRows.map(([l, x]) => [esc(lab(l)), x, x === m ? 'hi' : '']), { max: 26 });
+      document.getElementById('f-grad-cap').textContent = v === 'ei' ? 'Adjusted for age, education and employment, a $50,000+ household’s health conversation is 0.82 times as likely to be seeking emotional support.' : v === 'di' ? 'Adjusted, a $50,000+ household’s health conversation is 1.37 times as likely to be about diet, exercise or weight.' : 'Adjusted for income, age and employment, a college graduate’s health conversation is 0.83 times as likely to be seeking emotional support.';
+    });
+    csv('dl-grad', 'health-gradients.csv', ['measure', 'group', 'share_of_health_conversations_pct'], () => [['emotional support by income', d.emotional_by_income], ['diet and fitness by income', d.diet_by_income], ['emotional support by education', d.emotional_by_education]].flatMap(([m, rows]) => rows.map(([l, x]) => [m, l, x])));
+
+    // life stage
+    document.getElementById('f-stage').innerHTML = d.life_stage.map(([h, t]) => '<div class="card"><b>' + esc(h) + '</b><p>' + esc(t) + '</p></div>').join('');
+    R.evenRows();
+  }).catch(e => { console.error(e); });
+})();
+</script>
+</body>
+</html>
