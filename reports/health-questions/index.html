@@ -34,6 +34,11 @@
 .pkey { display: flex; gap: 16px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
 .pkey i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
 .cols svg { width: 100%; display: block; }
+.multi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; margin: 6px 0 14px; }
+.multi .panel h4 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 17px; line-height: 1.2; margin: 0 0 4px; color: var(--night); }
+.multi .panel svg { width: 100%; display: block; }
+@media (max-width: 760px) { .multi { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; } }
+@media (max-width: 460px) { .multi { grid-template-columns: 1fr; } }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 18px 0 6px; }
 .stat { background: var(--mist); border-radius: 8px; padding: 16px 18px; }
 .stat b { display: block; font-family: var(--serif); font-size: 34px; line-height: 1.05; font-weight: 500; }
@@ -126,13 +131,11 @@
         <figcaption id="f-kinds-cap">All health conversations. The six largest kinds are shown for women and men.</figcaption>
         <button class="dl" type="button" id="dl-kinds">Download CSV</button>
       </figure>
-      <p>The questions change with age. Emotional support falls away after 55, while general information and the practical questions about finding care, paperwork and insurance rise. Studying is a young person’s use. Pick a kind to see its share in each age group; hover a column for the value.</p>
-      <figure class="cols">
+      <p>The questions change with age. Emotional support falls away after 55, while general information and the practical questions about finding care, paperwork and insurance rise. Studying is a young person’s use. Each panel below is one kind of question, read left to right from the youngest adults to the oldest.</p>
+      <figure>
         <h3>Kinds of question by age</h3>
-        <p class="fsub">Share of each age group’s health conversations, %</p>
-        <div class="chips" id="c-age" role="group" aria-label="Kind of question"></div>
-        <svg id="f-age" viewBox="0 0 700 220" role="img" aria-label="Share of each age group's health conversations for the chosen kind of question"></svg>
-        <p class="readout" id="r-age"></p>
+        <p class="fsub">Share of each age group’s health conversations, %. Each panel has its own scale, with every value labelled.</p>
+        <div class="multi" id="f-age" role="group" aria-label="Share of each age group's health conversations, one panel per kind of question"></div>
         <button class="dl" type="button" id="dl-age">Download CSV</button>
       </figure>
     </section>
@@ -290,6 +293,26 @@
     out.textContent = opt && opt.idle ? opt.idle : '';
   }
 
+  /* small multiples: one line panel per series, each on its own scale, every point labelled; the trend reads at a glance */
+  function multiples(boxId, labels, series, color) {
+    const box = document.getElementById(boxId), font = 'Public Sans, Arial, sans-serif';
+    box.innerHTML = series.map((s, j) => '<div class="panel"><h4>' + esc(s.name) + '</h4><svg id="' + boxId + '-' + j + '" viewBox="0 0 240 130" role="img" aria-label="' + esc(s.name + ': ' + labels.map((l, i) => lab(l) + ' ' + s.values[i].toFixed(1) + '%').join(', ')) + '"></svg></div>').join('');
+    series.forEach((s, j) => {
+      const svg = document.getElementById(boxId + '-' + j), mk = R.svg(svg), W = R.width(svg, 320), H = 130, L = 10, Rr = 10, T = 20, B = 24, n = labels.length;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      const lo = Math.max(0, Math.min(...s.values) - 4), hi = Math.max(...s.values) + 2;
+      const x = i => L + (W - L - Rr) * (n === 1 ? 0.5 : i / (n - 1)), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+      mk('line', { x1: L, x2: W - Rr, y1: H - B + 4, y2: H - B + 4, stroke: '#e1e1e1' });
+      mk('path', { d: s.values.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' '), fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round' });
+      s.values.forEach((v, i) => {
+        mk('circle', { cx: x(i).toFixed(1), cy: y(v).toFixed(1), r: 3.5, fill: color });
+        const anchor = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
+        mk('text', { x: (x(i) + (i === 0 ? -6 : i === n - 1 ? 6 : 0)).toFixed(1), y: (y(v) - 8).toFixed(1), 'text-anchor': anchor, 'font-size': 12, 'font-weight': 600, fill: '#13233a', 'font-family': font }, v % 1 ? v.toFixed(1) : String(v));
+        mk('text', { x: (x(i) + (i === 0 ? -6 : i === n - 1 ? 6 : 0)).toFixed(1), y: H - 6, 'text-anchor': anchor, 'font-size': 11, fill: '#6b6b6b', 'font-family': font }, lab(labels[i]).replace(' and over', '+'));
+      });
+    });
+  }
+
   R.load('../../data/report_health_kinds.json').then(d => {
     document.getElementById('s-health').textContent = d.overview.health.toLocaleString('en-US');
     document.getElementById('s-people').textContent = d.overview.people.toLocaleString('en-US');
@@ -304,11 +327,10 @@
     });
     csv('dl-kinds', 'health-kinds-of-question.csv', ['kind', 'share_of_health_conversations_pct'], () => kindRows);
 
-    // kinds by age: one kind at a time
+    // kinds by age: six small panels, one line each, every value labelled
     const KA = d.kinds_by_age, kindNames = Object.keys(KA.series);
-    let ageKind = kindNames[0];
-    const drawAge = () => columns('f-age', 'r-age', KA.ages, [{ name: ageKind, values: KA.series[ageKind], color: '#b00b33' }], { max: 25, idle: 'Hover a column for its value.' });
-    chips('c-age', kindNames.map(k => [k, k]), v => { ageKind = v; drawAge(); });
+    const drawAge = () => multiples('f-age', KA.ages, kindNames.map(k => ({ name: k, values: KA.series[k] })), '#0e77a4');
+    drawAge();
     R.onWidth(drawAge);
     csv('dl-age', 'health-kinds-by-age.csv', ['kind', 'age', 'share_of_health_conversations_pct'], () => kindNames.flatMap(k => KA.ages.map((a, i) => [k, a, KA.series[k][i]])));
 
