@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>A Broader Look at How Americans Talk to AI About Health · State of the Prompt</title>
+<title>How Americans Talk to AI About Health and Emotional Support · State of the Prompt</title>
 <meta name="description" content="Report 3 from State of the Prompt: a health classifier read every conversation. What kinds of question people ask, who asks, and who the question is about.">
 <meta property="og:site_name" content="State of the Prompt">
 <meta property="og:type" content="article">
-<meta property="og:title" content="A Broader Look at How Americans Talk to AI About Health">
+<meta property="og:title" content="How Americans Talk to AI About Health and Emotional Support">
 <meta property="og:description" content="Report 3 from State of the Prompt: what kinds of health question people ask ChatGPT, who asks, and who the question is about.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
@@ -73,7 +73,7 @@
   <div class="wrap">
     <p class="crumb"><a href="../">Reports</a> / Report 3</p>
     <p class="kicker">Report 3 · October 2026</p>
-    <h1>A broader look at how Americans talk to AI about health</h1>
+    <h1>How Americans talk to AI about health and emotional support</h1>
     <p class="dek">A health classifier read every conversation, not just those filed under the health subject. One conversation in five is about health once emotional support counts. This report looks at what kinds of question people ask, who asks, and who the question is about.</p>
     <p class="byline">State of the Prompt project team · Rutgers University</p>
     <div class="btns">
@@ -219,7 +219,7 @@
         <p>Every conversation with at least one message and reply in text went through the same two steps, run by an open language model (Gemma 3, 27B) on Rutgers’ cluster, so no conversation text left it. First, a yes-or-no check: is this about health? Second, a classifier of twelve kinds of health use, applied message by message, with the conversation taking the majority. A conversation counts as health only when both agree. Image-only conversations, about 200,000, cannot be read and are left out.</p>
         <p>This page covers adults only: conversations by panelists 18 or older. Figures by age, gender, income, education, employment and parenthood use each person’s self-reported profile. Shares are of conversations unless noted, so people who use ChatGPT heavily count for more. The panel is not a random sample of the country, so the figures are best read as comparisons between groups.</p>
         <p>The definition here differs from Report 1, which uses the main subject assigned to each conversation from a list of 28. Both are published on this site with their definitions stated. “Health” here means two model checks agree; a human check of the definition is in progress.</p>
-        <p><strong>Suggested citation:</strong> Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., &amp; Shugars, S. (2026). <em>A broader look at how Americans talk to AI about health</em> (State of the Prompt Report No. 3). Rutgers University.</p>
+        <p><strong>Suggested citation:</strong> Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., &amp; Shugars, S. (2026). <em>How Americans talk to AI about health and emotional support</em> (State of the Prompt Report No. 3). Rutgers University.</p>
       </div>
     </section>
 
@@ -251,7 +251,7 @@
   const AGE = { '18-24': '18–24', '25-34': '25–34', '35-44': '35–44', '45-54': '45–54', '55+': '55 and over' };
   const INC = { 'Under $25,000': 'Under $25k', '$25,000 to $34,999': '$25k–35k', '$35,000 to $49,999': '$35k–50k', '$50,000 to $74,999': '$50k–75k', '$75,000 to $99,999': '$75k–100k', '$100,000 or more': '$100k and over' };
   const lab = s => AGE[s] || INC[s] || s;
-  R.cite('cite', 'btnnote', 'Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., & Shugars, S. (2026). A broader look at how Americans talk to AI about health (State of the Prompt Report No. 3). Rutgers University.');
+  R.cite('cite', 'btnnote', 'Garimella, K., Ognyanova, K., Aakhus, M., Jhaver, S., Lee, E. G., Li, J., & Shugars, S. (2026). How Americans talk to AI about health and emotional support (State of the Prompt Report No. 3). Rutgers University.');
 
   /* a row of chips; fn(value) runs on each pick, and on the first */
   function chips(id, items, fn) {
