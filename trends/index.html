@@ -135,7 +135,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
   </div>
   <section class="panel" aria-labelledby="c-h">
     <h2 id="c-h">Mentions per 1,000 conversations, by month</h2>
-    <p class="note" id="c-note">How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.</p>
+    <p class="note" id="c-note">How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure. Conversations got shorter over the year, so most terms drift down in later months; a rise or fall means more when it is larger than that.</p>
     <div id="chart"><p class="empty">Add a term above to begin.</p></div>
     <div class="dlrow" hidden><button class="btn" type="button" id="dl-month" aria-label="Download the monthly figures as a CSV file">Download CSV</button></div>
   </section>
@@ -163,6 +163,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     <p>A conversation mentions a term when the words appear in one of the person’s own messages, ignoring capital letters and punctuation; ChatGPT’s replies are not counted. Spelling variants and nicknames count, and some phrases are excluded on purpose (“hot dog” does not count as a dog). A mention says nothing about what the conversation is mainly about.</p>
     <p>“Share of conversations” is how many of every 1,000 conversations mention the term. “Share of people” is the percentage of people who mentioned it at least once: over the year for the table and the groups, and among the people who used ChatGPT that month for the chart. Conversation shares give more weight to people who use ChatGPT heavily; people shares count everyone once.</p>
     <p>Figures cover conversations by adults (18 and over), July 2025 to June 2026, in the panelist’s local time. A figure is published only when at least 20 different people stand behind it, and is withheld when five people supply more than half of it. A month with fewer mentions than that appears as a hollow point inside the hatched band, whose top is the publishing threshold: the true value is somewhere below it. Rates below 1 per 1,000 are shown to two decimals so that small differences are visible.</p>
+    <p>Conversations got shorter over the year, with fewer messages each, and a shorter conversation has fewer chances to mention anything. So most terms are mentioned somewhat less often in the later months even when interest in them has not changed. Read a rise or fall in one term as real only when it is larger than that general drift, for example by comparing it with other terms on the chart.</p>
   </section>
 </div>
 </main>
@@ -246,9 +247,10 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === meas)));
     const people = meas === 'people';
     document.getElementById('c-h').textContent = people ? 'Share of people who mentioned it, by month' : 'Mentions per 1,000 conversations, by month';
-    document.getElementById('c-note').textContent = people
+    const drift = ' Conversations got shorter over the year, so most terms drift down in later months; a rise or fall means more when it is larger than that.';
+    document.getElementById('c-note').textContent = (people
       ? 'Of the people who used ChatGPT that month, the percentage who mentioned the term at least once. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.'
-      : 'How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.';
+      : 'How many of every 1,000 conversations that month include the term in the person’s own words. Hollow points in the hatched band mark months with too few mentions to publish an exact figure.') + drift;
     document.getElementById('g-note').textContent = people
       ? 'The percentage of each group’s people who mentioned the term at least once during the year. “Too few” means too few of the group’s conversations mention it to publish a figure, or a handful of people supply most of them.'
       : 'Mentions per 1,000 of each group’s conversations. “Too few” means too few of the group’s conversations mention it to publish a figure, or a handful of people supply most of them.';
