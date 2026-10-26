@@ -695,6 +695,10 @@
       (series.some(se => (se.held || []).some(Boolean)) ? '<span>× Withheld: a handful of people supply most of that month’s mentions</span>' : '') + '</p>';
     return s;
   }
+  // Conversations got shorter over the year (fewer user messages each), so most
+  // terms' monthly rates drift down; shown wherever an answer reads a term by month.
+  const DRIFT_NOTE = 'Conversations got shorter over the year, with fewer messages each, so most terms are mentioned less often in later months even when interest has not changed. Read a rise or fall as real only when it is larger than that general drift.';
+  function driftNote(res) { if (!res.notes.includes(DRIFT_NOTE)) res.notes.push(DRIFT_NOTE); }
   function mentionNote(ts) {
     const ph = ts.map(t => t.name + ': ' + [].concat(t.phrases).slice(0, 6).join(', ') + ([].concat(t.phrases).length > 6 ? '…' : '')).join('; ');
     return 'A mention means the words appear in the person’s own message, whatever the conversation is about. Counted as: ' + ph + '.';
@@ -788,6 +792,7 @@
     if (P.intent === 'when') {
       res.readAs = ['everyone', 'mentions of ' + t.name, 'by month, hour and day'];
       if (!d) { res.title = 'Loading the figures for ' + t.name + ' failed. Try again.'; return res; }
+      driftNote(res);
       const mv = MONTHS.map(k => ({ k, v: d.month[k] })).filter(x => x.v != null);
       const hv = Array.from({ length: 24 }, (_, h) => ({ h, v: d.hour[h] })).filter(x => x.v != null);
       const wv = [0, 1, 2, 3, 4, 5, 6].map(x => ({ x, v: d.wday[x] })).filter(x => x.v != null);
@@ -812,6 +817,7 @@
         ? 'mentioned in ' + perK(vals[0]) + ' conversations, ' + compareK(vals[0], t.per1000, ref)
         : 'mentioned in ' + perK(Math.min(...vals)) + ' to ' + perK(Math.max(...vals)) + ' conversations depending on the ' + unit + ', against ' + perK(t.per1000) + ' over ' + ref;
       if (when.kind === 'months') {
+        driftNote(res);
         const vals = when.value.map(k => d.month[k]).filter(v => v != null);
         if (!vals.length) res.title = 'Too few conversations mention ' + t.name + ' ' + when.label + ' to say.';
         else if (when.value.length === 1) res.title = t.name + ' ' + when.label + ': mentioned in ' + perK(vals[0]) + ' conversations, ' + compareK(vals[0], t.per1000, 'the whole year') + '.';
@@ -843,6 +849,7 @@
     if (d) {
       const mv = MONTHS.map(k => ({ k, v: d.month[k] })).filter(x => x.v != null);
       if (mv.length >= 2) {
+        driftNote(res);
         const hi = mv.reduce((a, b) => (b.v > a.v ? b : a)), lo = mv.reduce((a, b) => (b.v < a.v ? b : a));
         res.body.push(flat(mv.map(x => x.v)) ? 'Mentions held steady through the year.'
           : 'Mentions peaked in ' + MONTH_NAME[hi.k] + ' (' + perK(hi.v) + ') and were lowest in ' + MONTH_NAME[lo.k] + ' (' + perK(lo.v) + ')' +
@@ -882,7 +889,8 @@
       res.title = 'Mentions per 1,000 conversations over the year: ' + andList(ts.map(t => t.name + ' ' + fmtK(t.per1000))) + '.';
       res.body.push('Share of people who mentioned each at least once: ' + andList(ts.map(t => t.name + ' ' + ppFmt(t.pp))) + '.');
       if (ds.every(d => d)) {
-        const peaks = ts.map((t, i) => { const mv = MONTHS.filter(k => ds[i].month[k] != null); return mv.length ? t.name + ' in ' + MONTH_NAME[mv.reduce((a, b) => (ds[i].month[b] > ds[i].month[a] ? b : a))] : null; }).filter(Boolean);
+        driftNote(res);
+        const peaks =ts.map((t, i) => { const mv = MONTHS.filter(k => ds[i].month[k] != null); return mv.length ? t.name + ' in ' + MONTH_NAME[mv.reduce((a, b) => (ds[i].month[b] > ds[i].month[a] ? b : a))] : null; }).filter(Boolean);
         if (peaks.length) res.body.push('Peak months: ' + andList(peaks) + '.');
       }
       res.chart = (ds.every(d => d) ? '<h3>Mentions per 1,000 conversations, by month</h3>' + linesSVG(ts.map((t, i) => ({
