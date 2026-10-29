@@ -19,12 +19,12 @@ The panel is not a random sample of the country, so our analyses focus on compar
 - **Insights**: short findings on what people ask AI, and when.
 - **Reports**: longer write-ups on particular subjects, starting with politics and health.
 - **Explore**: a dashboard of who asks about what, by group.
-- **Ask the data**: questions in plain words, answered from published totals. The question box suggests questions as you type and allows for small typos. Questions are answered in the visitor's browser and are never sent anywhere.
+- **Ask the data**: questions in plain words, answered from published totals. The question box suggests questions as you type and allows for small typos. Questions are answered in the visitor's browser; an anonymous copy is kept to improve the tool.
 - **Trends**: how often people mention particular people, places, products, and other terms, month by month and across groups.
 
 ## Privacy
 
-The conversations are often deeply personal, and the full text stays on secure university systems, available only to the research team under a license that permits research use at Rutgers. Everything on the site is an aggregate describing a group of people, never an individual, and no conversation is ever shown or quoted. The figures cover adults only. A figure is withheld when it rests on too few conversations or too few people, or when a handful of people account for most of it. This repository contains no conversation text, no panelist or conversation identifiers, and no individual-level data.
+The conversations are often deeply personal, and the full text stays on secure university systems, available only to the research team under a license that permits research use at Rutgers. Everything on the site is an aggregate describing a group of people, never an individual, and no conversation is ever shown or quoted. The figures cover adults only. A figure is withheld when it rests on too few conversations or too few people, or when a handful of people account for most of it. This repository contains no conversation text, no panelist or conversation identifiers, and no individual-level data. The site itself counts visits with Google Analytics and keeps an anonymous copy of the questions typed on the Ask page, to improve the tool; questions are not sent to Google Analytics.
 
 ## Team
 

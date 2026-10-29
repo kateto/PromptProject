@@ -1,0 +1,5 @@
+# Every page on this site is public. Search engines and AI crawlers are welcome.
+User-agent: *
+Allow: /
+
+Sitemap: https://stateoftheprompt.net/sitemap.xml

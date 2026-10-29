@@ -3,7 +3,8 @@
  * Answers a typed question in the visitor's browser. The question is read into
  * four slots (who, what, when, why) by matching its words against the lists
  * below; the answer is looked up in data/ask.json and written from sentence
- * templates. The question is never sent anywhere. Approach after Kiran
+ * templates. Nothing here sends the question anywhere; the anonymous copy the
+ * Ask page keeps is sent by ask-log.js. Approach after Kiran
  * Garimella's earlier draft site.
  *
  * Every figure covers adults: conversations by panelists 18 or older at the time.
