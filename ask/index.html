@@ -125,6 +125,7 @@
 <script src="../assets/ask.js"></script>
 <script src="../assets/ask-reader.js"></script>
 <script src="../assets/ask-merge.js"></script>
+<script src="../assets/ask-dig.js"></script>
 <script src="../assets/ask-log.js"></script>
 <script>
 (function () {
@@ -140,6 +141,8 @@
       const route = window.PromptMerge.route(qq);
       return window.PromptAsk.prepare(route.question).then(() => {
         const r = window.PromptAsk.render(out, route.question, './');
+        // a group and a subject: add what they ask about within it, from the tracked terms (ask-dig.js)
+        window.PromptDig.run(out, window.PromptAsk.parse(route.question), r.readAs);
         // the reader's "no figures by state" note says what the answer's own note already says
         const rn = route.notes.filter(n => !(/by state/.test(n) && r.notes.some(m => /by state/.test(m))));
         if (rn.length) out.insertAdjacentHTML('afterbegin', '<div class="anote">' + rn.map(n => '<div>' + n.replace(/</g, '&lt;') + '</div>').join('') + '</div>');
