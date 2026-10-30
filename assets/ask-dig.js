@@ -96,7 +96,9 @@
   }
   function rows(pl) {
     if (pl.purpose) return purposeRows(pl);
-    return Promise.all([topicRows(pl), termRows(pl)]).then((r) => ({ topics: r[0], terms: r[1].length >= 3 ? r[1] : [] }));
+    // a single topic is not a breakdown: each topic is filed under one subject, so a small subject can hold
+    // just one, and a lone bar ("the one topic the classifier tells apart", 39%) misleads more than it shows
+    return Promise.all([topicRows(pl), termRows(pl)]).then((r) => ({ topics: r[0].length >= 2 ? r[0] : [], terms: r[1].length >= 3 ? r[1] : [] }));
   }
   function termRows(pl) {
     const A = window.PromptAsk, ix = A.mentions();
