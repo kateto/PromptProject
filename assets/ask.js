@@ -73,8 +73,8 @@
       'Finished College (4-year degree)': 'college graduates', 'Post Graduate Study or Degree': 'people with a postgraduate degree' },
     race: { Caucasian: 'people who identify as white', 'African American/Black': 'people who identify as Black',
       'Hispanic/Latino': 'people who identify as Hispanic or Latino', Asian: 'people who identify as Asian',
-      'Native American/Alaskan': 'people who identify as Native American or Alaska Native', 'Middle Eastern': 'people who identify as Middle Eastern',
-      'Pacific Islander': 'people who identify as Pacific Islander', Other: 'people of another race or ethnicity' },
+      'Native American/Pacific Islander': 'people who identify as Native American, Alaska Native or Pacific Islander',
+      Other: 'people of another race or ethnicity' },
     hispanic: { Yes: 'people of Hispanic origin', No: 'people not of Hispanic origin' },
     region: { Northeast: 'people in the Northeast', Midwest: 'people in the Midwest', South: 'people in the South', West: 'people in the West' },
     employment: { Student: 'students', Retired: 'retirees', Unemployed: 'people who are unemployed', Homemaker: 'homemakers',
@@ -90,7 +90,7 @@
     'Some High School or Less': 'Some high school', 'Finished High School': 'High school', 'Some College, A.A. Degree or Technical College': 'Some college',
     'Finished College (4-year degree)': 'Bachelor’s degree', 'Post Graduate Study or Degree': 'Postgraduate',
     Caucasian: 'White', 'African American/Black': 'Black', 'Hispanic/Latino': 'Hispanic or Latino', Asian: 'Asian',
-    'Native American/Alaskan': 'Native American', 'Middle Eastern': 'Middle Eastern', 'Pacific Islander': 'Pacific Islander', Other: 'Other race',
+    'Native American/Pacific Islander': 'Native American or Pacific Islander', Other: 'Other race',
     Yes: 'Hispanic', No: 'Not Hispanic', Northeast: 'Northeast', Midwest: 'Midwest', South: 'South', West: 'West',
     Student: 'Students', Retired: 'Retired', Unemployed: 'Unemployed', Homemaker: 'Homemakers', 'Part-time': 'Part-time',
     'Full-time White Collar/Professional': 'White-collar', 'Full-time Blue Collar': 'Blue-collar',
@@ -149,9 +149,8 @@
     ['african americans?|black (people|americans|users)|black', 'race', 'African American/Black'],
     ['white (people|americans|users)|white|caucasians?', 'race', 'Caucasian'],
     ['asian americans?|asians?', 'race', 'Asian'],
-    ['native americans?|american indians?|alaska natives?', 'race', 'Native American/Alaskan'],
-    ['middle eastern', 'race', 'Middle Eastern'],
-    ['pacific islanders?', 'race', 'Pacific Islander'],
+    // shown as one group since 2026-10-30 (too few people in each to show apart)
+    ['native americans?|american indians?|alaska natives?|native hawaiians?|pacific islanders?', 'race', 'Native American/Pacific Islander'],
     ['northeast(ern)?|new england', 'region', 'Northeast'],
     ['midwest(ern)?|midwesterners', 'region', 'Midwest'],
     ['the south|south|southern(ers)?', 'region', 'South'],
@@ -210,7 +209,9 @@
     ['christians?|catholics?|protestants?|evangelicals?|muslims?|jews|jewish (people|americans)|hindus?|buddhists?|sikhs?|mormons?|' +
       'atheists?|agnostics?|religious (people|americans|users)', 'religion'],
     ['immigrants?|migrants?|refugees?|asylum seekers?|non ?citizens|undocumented (people|immigrants)|green card holders?', 'immigration status'],
-    ['people with disabilities|disabled (people|users|americans)', 'disability']
+    ['people with disabilities|disabled (people|users|americans)', 'disability'],
+    // too few people to show as a group; they are counted in everyone's figures ("=" marks a note of its own)
+    ['middle eastern( people| americans| users)?|arab americans?|arabs?', '=Middle Eastern respondents are too few to show as a group of their own (they are counted in everyone’s figures)']
   ];
   const ASKER_BEFORE = '(?<= (?:do|does|did|are|would|could|can) )';
   const ASKER_AFTER = '(?= (?:ask|use|talk|want|search|chat|type|bring|look|need|write|get|turn|and|or|differ))';
@@ -334,9 +335,9 @@
       const named = [first];           // "Republicans and Democrats", "... than Democrats"
       let more;
       while ((more = take(s, '(?<= (?:and|or|than|vs|versus|to) )(?:' + pat + ')'))) named.push(more);
-      out.unrecorded = what;
-      out.notes.push('Figures are not published by ' + what + ', so ' + andList(named.map(w => '"' + asTyped(question, w) + '"')) +
-        (named.length > 1 ? ' are' : ' is') + ' read as everyone.');
+      out.unrecorded = what.charAt(0) === '=' ? 'small group' : what;
+      out.notes.push((what.charAt(0) === '=' ? what.slice(1) : 'Figures are not published by ' + what) + ', so ' +
+        andList(named.map(w => '"' + asTyped(question, w) + '"')) + (named.length > 1 ? ' are' : ' is') + ' read as everyone.');
       break;
     }
     DIMWORD.forEach(([pat, dim]) => { if (!out.dim && take(s, pat)) out.dim = dim; });

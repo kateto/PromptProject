@@ -198,7 +198,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     '$50,000 to $74,999': '$50k–75k', '$75,000 to $99,999': '$75k–100k', '$100,000 or more': '$100k and over',
     'Some High School or Less': 'Some high school', 'Finished High School': 'High school', 'Some College, A.A. Degree or Technical College': 'Some college',
     'Finished College (4-year degree)': 'Bachelor’s degree', 'Post Graduate Study or Degree': 'Postgraduate',
-    Caucasian: 'White', 'African American/Black': 'Black', 'Hispanic/Latino': 'Hispanic or Latino', 'Native American/Alaskan': 'Native American', Other: 'Other race',
+    Caucasian: 'White', 'African American/Black': 'Black', 'Hispanic/Latino': 'Hispanic or Latino', 'Native American/Pacific Islander': 'Native American or Pacific Islander', Other: 'Other race',
     Student: 'Students', Homemaker: 'Homemakers', 'Full-time White Collar/Professional': 'White-collar', 'Full-time Blue Collar': 'Blue-collar',
     'Yes, and at least one lives in my home': 'Child at home', 'Yes, but they do not live in my home': 'Children elsewhere' };
   const lab = (dim, lv) => dim === 'hispanic' ? (lv === 'Yes' ? 'Hispanic origin' : 'Not Hispanic') : dim === 'children' && lv === 'No' ? 'No children' : (SHORT[lv] || lv);
