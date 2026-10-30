@@ -922,7 +922,7 @@
       res.title = 'This site does not report on suicide or self-harm.';
       res.body.push('Conversations about mental health in general are counted with the other subjects.');
       res.body.push('If you are thinking about suicide, or are worried about someone, you can call or text 988 to reach the 988 Suicide and Crisis Lifeline in the US.');
-      res.more = [['What do people ask about mental health?', 'What do people ask about mental health?'], ['Who asks about mental health the most?', 'Who asks about mental health the most?']];
+      res.more = [['How often do people ask about mental health?', 'How often do people ask about mental health?'], ['Who asks about mental health the most?', 'Who asks about mental health the most?']];
       return res;
     }
 
