@@ -54,9 +54,26 @@
     if (P.what.length === 0 && P.why.length === 1 && PURPOSE[P.why[0]] && /^\s*(what|which|how)\b/i.test(P.q || '') && !/^\s*how\s+(often|much|many|frequently|common)/i.test(P.q || '')) return { purpose: P.why[0], who: P.who[0] || null };
     if (P.what.length !== 1 || P.why.length) return null;
     if (!/^\s*(what|which)\b/i.test(P.q || '')) return null;
-    const cats = CATS[P.what[0]];
-    if (!cats) return null;
-    return { what: P.what[0], cats, who: P.who[0] || null };
+    if (/^p_/.test(P.what[0])) return null;
+    return { what: P.what[0], cats: CATS[P.what[0]] || [], who: P.who[0] || null };
+  }
+  const SUBJECT_CAT = { pol: 'politics_government_law' };   // the site's political measure is our politics subject
+  let topicsP = null;
+  function topicsData() {
+    if (!topicsP) topicsP = fetch(DATA + 'topics_by_group.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    return topicsP;
+  }
+  // the classifier's topics within the subject, as shares of the group's conversations on that subject, with everyone's share
+  function topicRows(pl) {
+    return topicsData().then((W) => {
+      if (!W) return [];
+      const cat = SUBJECT_CAT[pl.what] || pl.what;
+      const g = pl.who ? ((W.groups[pl.who.dim] || {})[pl.who.level] || null) : W.everyone;
+      if (!g) return [];
+      return Object.keys(W.topics).filter((t) => W.topics[t].cat === cat && g[t] != null)
+        .map((t) => ({ id: t, name: W.topics[t].label, v: g[t], ref: pl.who ? (W.everyone[t] != null ? W.everyone[t] : null) : null }))
+        .sort((a, b) => b.v - a.v).slice(0, SHOW);
+    });
   }
   // the purposes the site's parser reads, and the noun for their conversations
   const PURPOSE = { p_asking: 'question', p_doing: 'task', p_expressing: 'just-talking', p_school: 'school', p_selflearn: 'self-directed learning', p_howto: 'how-to', p_work: 'work', p_jobsearch: 'job-search', p_news: 'news' };
@@ -75,8 +92,11 @@
   }
   function rows(pl) {
     if (pl.purpose) return purposeRows(pl);
+    return Promise.all([topicRows(pl), termRows(pl)]).then((r) => ({ topics: r[0], terms: r[1].length >= 3 ? r[1] : [] }));
+  }
+  function termRows(pl) {
     const A = window.PromptAsk, ix = A.mentions();
-    if (!ix) return Promise.resolve([]);
+    if (!ix || !pl.cats.length) return Promise.resolve([]);
     const terms = ix.terms.filter((t) => pl.cats.indexOf(t.cat) >= 0 && t.per1000 != null).sort((a, b) => b.per1000 - a.per1000).slice(0, TOP);
     if (!pl.who) return Promise.resolve(terms.slice(0, SHOW).map((t) => ({ id: t.id, name: t.name, cat: t.cat, v: t.per1000, ref: null })));
     return Promise.all(terms.map((t) => A.loadTerm(t.id).then((d) => {
@@ -87,14 +107,42 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const SUBJECT = { sports: 'sports', health_medicine: 'health', entertainment_games: 'entertainment', politics_government_law: 'politics', pol: 'politics', money_shopping_finance: 'money',
     work_career_business: 'work', technology_devices: 'technology', social_media_online: 'social media', food_drink: 'food and drink', pets_animals: 'pets', travel_places_vehicles: 'travel',
-    home_garden_hobbies: 'home and garden', education_schools: 'education', relationships_family: 'relationships', religion_spirituality_philosophy: 'religion', history_society_culture: 'history', science_nature: 'science' };
+    home_garden_hobbies: 'home and garden', education_schools: 'education', relationships_family: 'relationships', religion_spirituality_philosophy: 'religion', history_society_culture: 'history', science_nature: 'science',
+    mental_health: 'mental health', fitness_nutrition: 'fitness and nutrition', art_design_images: 'art and design', beauty_fashion: 'beauty and fashion', math: 'math', sex_sexuality: 'sex and sexuality',
+    languages_translation: 'languages', personal_growth: 'personal growth', social_chat_companionship: 'companionship', creative_writing: 'creative writing', programming: 'programming', unclear: 'unclear subjects', other: 'other subjects' };
   // a common noun reads lower-case mid-sentence (sleep, periods); names, places, brands and drugs keep their capital
   const PROPER = /^(People|Places|Companies|Apps|Medications)/;
   function wordOf(r) { return PROPER.test(r.cat || '') || /^.[^a-z]|[A-Z]/.test(r.name.slice(1)) ? r.name : r.name.charAt(0).toLowerCase() + r.name.slice(1); }
+  function barsOf(rs, fmt, hiFirst) {
+    const max = Math.max.apply(null, rs.map((r) => Math.max(r.v, r.ref || 0))) * 1.12 || 1;
+    let h = '<div class="abars">';
+    rs.forEach((r, i) => {
+      h += '<div class="abrow' + (hiFirst && i === 0 ? ' hi' : '') + '"><span class="ablabel">' + esc(r.name) + '</span><span class="abtrack"><span class="abfill" style="width:' + (r.v / max * 100).toFixed(2) + '%"></span>' +
+        (r.ref != null ? '<span class="abref" style="left:' + (r.ref / max * 100).toFixed(2) + '%"></span>' : '') + '</span><span class="abval">' + fmt(r.v) + '</span></div>';
+    });
+    return h + '</div>';
+  }
+  const same = (r, fmt) => r.ref == null ? '' : r.v / r.ref >= 1.3 ? ', above everyone’s ' + fmt(r.ref) : r.v / r.ref <= 0.77 ? ', below everyone’s ' + fmt(r.ref) : ', about the same as everyone';
   function html(pl, rs, whoText) {
+    const subj = SUBJECT[pl.what] || pl.what;
+    if (pl.purpose) return purposeHtml(pl, rs.map((r) => Object.assign({}, r, { word: wordOf(r) })), whoText);
+    const topics = rs.topics.map((r) => Object.assign({}, r, { word: wordOf(r) })), terms = rs.terms.map((r) => Object.assign({}, r, { word: wordOf(r) }));
+    const who = pl.who ? whoText : 'everyone';
+    let h = '';
+    if (topics.length) {
+      const first = topics[0], next = topics.slice(1, 3);
+      const s = 'Within ' + subj + ', the ' + (topics.length === 1 ? 'one topic the classifier tells apart' : topics.length === 2 ? 'two topics the classifier tells apart' : 'most common topics') + ' in the conversations of ' + who +
+        (topics.length <= 2 ? ': ' : ' are ') + first.word + ' (' + pc(first.v) + same(first, pc) + ')' + (next.length ? (topics.length === 2 ? ' and ' : ', then ') + next.map((r) => r.word + ' (' + pc(r.v) + ')').join(' and ') : '') + '.';
+      h += '<p class="abody">' + esc(s) + '</p><div class="achart"><h3>' + esc('Topics within ' + subj + ', ' + who + ' (share of their ' + subj + ' conversations)') + '</h3>' + barsOf(topics, pc, true) +
+        (pl.who ? '<p class="abkey"><i></i>Everyone’s share for the same topic</p>' : '') +
+        '<p class="abkey">Topics from a classifier that reads every conversation, not the main-subject label used in the figure below. Adults only.</p></div>';
+    }
+    if (terms.length) h += termsHtml(pl, terms, whoText, !topics.length);
+    if (!topics.length && !terms.length) h += '<p class="abody">' + esc('The figures do not break ' + subj + ' down any further for ' + who + '.') + '</p>';
+    return h;
+  }
+  function termsHtml(pl, rs, whoText, lead) {
     const A = window.PromptAsk, perK = A.perK, fmtK = A.fmtK, subj = SUBJECT[pl.what] || pl.what;
-    rs = rs.map((r) => Object.assign({}, r, { name: r.name, word: wordOf(r) }));
-    if (pl.purpose) return purposeHtml(pl, rs, whoText);
     const first = rs[0], next = rs.slice(1, 3);
     let s;
     if (pl.who) {
@@ -104,21 +152,15 @@
     } else {
       s = 'Within ' + subj + ', the terms people mention most are ' + first.word + ' (' + perK(first.v) + ' conversations)' + (next.length ? ', ' + next.map((r) => r.word + ' (' + fmtK(r.v) + ')').join(' and ') : '') + '.';
     }
-    const max = Math.max.apply(null, rs.map((r) => Math.max(r.v, r.ref || 0))) * 1.12 || 1;
-    let h = '<p class="abody">' + esc(s) + '</p><div class="achart"><h3>' + esc(whoText ? 'Mentions within ' + subj + ', ' + whoText : 'Most mentioned terms within ' + subj) + ' (per 1,000 conversations)</h3><div class="abars">';
-    rs.forEach((r, i) => {
-      h += '<div class="abrow' + (i === 0 ? ' hi' : '') + '"><span class="ablabel">' + esc(r.name) + '</span><span class="abtrack"><span class="abfill" style="width:' + (r.v / max * 100).toFixed(2) + '%"></span>' +
-        (r.ref != null ? '<span class="abref" style="left:' + (r.ref / max * 100).toFixed(2) + '%"></span>' : '') + '</span><span class="abval">' + fmtK(r.v) + '</span></div>';
-    });
-    h += '</div>' + (pl.who ? '<p class="abkey"><i></i>Everyone’s rate for the same term</p>' : '') +
+    let h = '<p class="abody">' + esc(lead ? s : 'By name, ' + s.charAt(0).toLowerCase() + s.slice(1)) + '</p><div class="achart"><h3>' + esc(whoText ? 'Mentions within ' + subj + ', ' + whoText : 'Most mentioned terms within ' + subj) + ' (per 1,000 conversations)</h3>' + barsOf(rs, fmtK, true);
+    h += (pl.who ? '<p class="abkey"><i></i>Everyone’s rate for the same term</p>' : '') +
       '<p class="abkey">From the ' + subj + ' terms this site tracks in people’s own messages; a term is counted once per conversation that mentions it.</p></div>';
     return h;
   }
   const pc = (v) => v.toFixed(1) + '%';
   function purposeHtml(pl, rs, whoText) {
     const noun = PURPOSE[pl.purpose], first = rs[0], next = rs.slice(1, 3);
-    const same = (r) => r.ref == null ? '' : r.v / r.ref >= 1.3 ? ', above everyone’s ' + pc(r.ref) : r.v / r.ref <= 0.77 ? ', below everyone’s ' + pc(r.ref) : ', about the same as everyone';
-    const s = 'Within the ' + noun + ' conversations of ' + (pl.who ? whoText : 'everyone') + ', the most common topics are ' + first.word + ' (' + pc(first.v) + same(first) + ')' +
+    const s = 'Within the ' + noun + ' conversations of ' + (pl.who ? whoText : 'everyone') + ', the most common topics are ' + first.word + ' (' + pc(first.v) + same(first, pc) + ')' +
       (next.length ? ', then ' + next.map((r) => r.word + ' (' + pc(r.v) + ')').join(' and ') : '') + '.';
     const max = Math.max.apply(null, rs.map((r) => Math.max(r.v, r.ref || 0))) * 1.12 || 1;
     let h = '<p class="abody">' + esc(s) + '</p><div class="achart"><h3>' + esc('Topics within ' + noun + ' conversations, ' + (pl.who ? whoText : 'everyone') + ' (share of those conversations)') + '</h3><div class="abars">';
@@ -134,7 +176,7 @@
     const pl = plan(P);
     if (!pl) return Promise.resolve(false);
     return rows(pl).then((rs) => {
-      if (rs.length < 3) return false;
+      if (pl.purpose && rs.length < 3) return false;
       const title = root.querySelector('.atitle');
       if (!title) return false;
       const whoText = pl.who ? (readAs && readAs[0] ? readAs[0].replace(/^people$/i, 'people') : 'this group') : '';
