@@ -355,6 +355,15 @@
     // "When do people mention Christmas?": the holiday was read as a time; an
     // explicit mention question looks for terms in the whole question instead.
     if (out.mentionIntent && !out.mentionsAll.length) out.mentionsAll = findMentions(raw);
+    // In an explicit mention question, a term found with a group word taken out ("Virginia" once
+    // "West" was read as a region) gives way to the longer term the whole question names ("West Virginia").
+    if (out.mentionIntent && out.mentionsAll.length) {
+      const whole = findMentions(raw), seenIds = new Set();
+      out.mentionsAll = out.mentionsAll.map(h => whole.find(w => w.p.length > h.p.length && (' ' + w.p + ' ').indexOf(' ' + h.p + ' ') >= 0) || h)
+        .filter(h => !seenIds.has(h.id) && seenIds.add(h.id));
+    }
+    // "How often do people mention ICE?": no counted phrase matched, so try the terms' names.
+    if (out.mentionIntent && !out.mentionsAll.length) out.mentionsAll = findMentions(raw, NAMES);
     out.raw = raw;
     out.rest = s.t;                     // what was not read: consumed spans are masked with #
     out.occupation = occ || null;
@@ -551,6 +560,7 @@
   let MENT = null, MBASE = '';
   const MDET = {};
   let PHRASES = [];                     // [{p: normalized phrase, id}], longest first
+  let NAMES = [];                       // [{p: normalized term name, id}], for explicit mention questions
   const SKIP_IMPLICIT = new Set(['ai', 'chatgpt', 'chat gpt', 'chatgbt', 'chat gbt', 'openai', 'open ai']);
   const LINE_COLORS = ['#b00b33', '#0e77a4', '#858585', '#c99a2e', '#3d7a5a'];
   const DIM_NAME = { age: 'age', gender: 'gender', income: 'household income', education: 'education', race: 'race and ethnicity',
@@ -562,7 +572,12 @@
     PHRASES = [];
     ix.terms.forEach(t => {
       MENT.byId[t.id] = t;
-      [].concat(t.phrases).forEach(ph => {
+      // a name with a part in brackets ("ICE (immigration enforcement)"), as Ask's own links write it,
+      // is read whole, so the words in the brackets cannot match another term ("immigration")
+      // and so is a name of two or more words ("Israel-Gaza war", "Student loans") that is not itself
+      // a phrase, so the name Ask writes in its own links reads as that term and not as two
+      const full = /\(/.test(t.name) || norm(t.name).trim().split(' ').length >= 2 ? [t.name] : [];
+      [].concat(t.phrases, full).forEach(ph => {
         const p = norm(ph).trim();
         if (p && !seen.has(p + '|' + t.id)) { seen.add(p + '|' + t.id); PHRASES.push({ p, id: t.id }); }
       });
@@ -571,13 +586,22 @@
     // person, then a place, then a topic-model word.
     const rank = id => ({ m: 0, p: 1, g: 2, t: 3 })[MENT.byId[id].src] || 4;
     PHRASES.sort((a, b) => b.p.length - a.p.length || rank(a.id) - rank(b.id));
+    // A term's own name, without any part in brackets ("ICE" for "ICE (immigration
+    // enforcement)"), for explicit mention questions only: the name is what people
+    // type, though it is not always one of the phrases counted.
+    NAMES = [];
+    ix.terms.forEach(t => {
+      const p = norm(t.name.replace(/\s*\([^)]*\)\s*/g, ' ')).trim();
+      if (p && !seen.has(p + '|' + t.id)) NAMES.push({ p, id: t.id });
+    });
+    NAMES.sort((a, b) => b.p.length - a.p.length || rank(a.id) - rank(b.id));
   }
-  function ppFmt(v) { return v == null ? 'not shown' : (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%'; }
-  function findMentions(text) {         // ordered term ids; each matched span is used once
+  function ppFmt(v) { return v == null ? 'not shown' : v > 0 && v < 0.05 ? 'under 0.1%' : (v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%'; }
+  function findMentions(text, list) {   // ordered term ids; each matched span is used once
     if (!MENT) return [];
     let t = text;
     const hits = [];
-    PHRASES.forEach(({ p, id }) => {
+    (list || PHRASES).forEach(({ p, id }) => {
       const i = t.indexOf(' ' + p + ' ');
       if (i < 0) return;
       hits.push({ id, p, at: i });
@@ -937,7 +961,7 @@
         res.title = (un.length === 1 ? '“' + un[0].s + '” is' : andList(un.map(u => '“' + u.s + '”')) + ' are') + ' not on our list of terms.';
         res.body.push('This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well come up in the conversations; it is simply not counted here.');
         res.more = [].concat(...un.map(u => u.alts.map(t => ['How often do people mention ' + t.name + '?', 'How often do people mention ' + t.name + '?'])));
-        res.links = [['Browse the list of terms', '../trends/#b-h']];
+        res.links = [['Browse popular terms', '../trends/#b-h']];
         return res;
       }
     }
@@ -1007,9 +1031,17 @@
         res.more.push(['Health by ' + DATA.dims[P.dim].toLowerCase(), 'Health by ' + DATA.dims[P.dim].toLowerCase()]);
         return res;
       }
+      // A question about the study itself ("where does the data come from?")
+      if (!P.minors && META_Q.test(P.raw)) {
+        res.title = 'This page answers questions about what people ask ChatGPT.';
+        res.body.push('Who is in the study, where the conversations come from and how they were sorted into subjects is explained on the About page.');
+        res.links = [['About the study', '../about/']];
+        res.more = SUGGEST.slice(0, 4);
+        return res;
+      }
       res.title = P.minors ? 'Try asking about adults.' : 'We could not match that question to the data.';
       res.body.push('Try naming a subject (health, money, recipes, politics), a group of people (women, retirees, people in the South) or a time (at night, on weekends, in December).');
-      if (!P.minors) res.body.push('Specific names (people, places, products, shows) are answered only for the terms on our list, which you can browse on the Trends page. A name that is not on the list may still come up in the conversations; it simply has not been added to this site.');
+      if (!P.minors) res.body.push('Specific names (people, places, products, shows) are answered only for the terms on our list. The Trends page shows the most-mentioned ones, and you can type any other name to check it. A name that is not on the list may still come up in the conversations; it simply has not been added to this site.');
       res.more = SUGGEST.slice(0, 4);
       return res;
     }
@@ -1247,6 +1279,9 @@
       '</span><span class="abval">' + pct(r.v) + '</span></div>').join('') + '</div>';
   }
 
+  // Questions about the study rather than the conversations: answered with a pointer to About.
+  const META_Q = / (the data|this data|data come|data comes|dataset|data set|the study|this study|the panel|this panel|the sample|this site|methodology|how was this|how were the|how many conversations|how many people are|who is in|see the conversations|read the conversations) /;
+
   const SUGGEST = [
     ['Do older people ask more about health?', 'Do older people ask more about health?'],
     ['What do students ask at night?', 'What do students ask at night?'],
@@ -1294,6 +1329,6 @@
   // Fetch whatever a question will need, so render() can stay synchronous.
   function prepare(question) { return Promise.all(mentionRoute(parse(question)).map(loadTerm)); }
 
-  window.PromptAsk = { load, prepare, loadTerm, parse, answer, render, SUGGEST, mentionRoute, linesSVG, monthFloors, perK, fmtK, oneInK, ppFmt,
+  window.PromptAsk = { load, prepare, loadTerm, parse, answer, render, SUGGEST, META_Q, mentionRoute, linesSVG, monthFloors, perK, fmtK, oneInK, ppFmt,
     mentions: () => MENT, termDetail: id => MDET[id], months: () => MONTHS, monthName: k => MONTH_NAME[k] };
 })();

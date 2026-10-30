@@ -7,7 +7,7 @@
  *   Source    "suggested" when it is word for word a question the site offers
  *             (the question box's list or Ask's own examples), otherwise "typed"
  *   Outcome   what Ask did: answered, mentions, minors, sensitive, no match,
- *             needs subject, term not listed, too few
+ *             needs subject, term not listed, too few, about the study
  *   Matched   what the question was read as (groups, subjects, purposes, times,
  *             terms), groups it named that the site has no figures for, and
  *             "rewritten" when the second reader rewrote it
@@ -31,7 +31,8 @@
     if (/not on our list of terms/.test(t)) return 'term not listed';
     if (/^We could not match/.test(t)) return 'no match';
     if (/^Name a subject/.test(t)) return 'needs subject';
-    if (/^Too few/.test(t)) return 'too few';
+    if (/^Too few|^This figure is not published/.test(t)) return 'too few';
+    if (/^This page answers questions about/.test(t)) return 'about the study';
     return mids.length ? 'mentions' : 'answered';
   }
   // what the question was read as, in the site's own codes

@@ -160,11 +160,12 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     <div class="dlrow" hidden><button class="btn" type="button" id="dl-groups" aria-label="Download the figures by group as a CSV file">Download CSV</button></div>
   </section>
   <section class="panel" aria-labelledby="b-h">
-    <h2 id="b-h">Our list of terms</h2>
-    <p class="note">The terms this site tracks, by broad category, most mentioned first. The list is a selection: a name or word that is not on it may well come up in the conversations; it simply has not been added here. Terms mentioned too rarely to chart month by month are left out.</p>
+    <h2 id="b-h">Popular terms to chart</h2>
+    <p class="note">The terms mentioned often enough to chart month by month, by broad category, most mentioned first. This is only part of what the site tracks: many more people, places and products are on our list but come up too rarely to chart. Type any name in the box above to check it, or ask about it on the <a href="../ask/">Ask page</a>. A name that is not on our list may still come up in the conversations; it simply has not been added here.</p>
     <label for="cat" style="position:absolute;left:-9999px;">Category</label>
     <select id="cat" class="catsel"></select>
     <div class="browse" id="browse"></div>
+    <p class="note" id="browse-more"></p>
   </section>
   <section class="how" aria-labelledby="how-h">
     <h2 id="how-h">How mentions are counted</h2>
@@ -235,7 +236,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
       return;
     }
     notice('<p><b>“' + esc(text) + '” is not on our list of terms.</b></p>' +
-      '<p>This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well be mentioned in the conversations; it is simply not counted here. Browse <a href="#b-h">our list of terms</a> below, or ask about a broader subject on the <a href="../ask/">Ask page</a>.</p>');
+      '<p>This site tracks a selected set of people, places, products and other terms. A term that is not on the list may well be mentioned in the conversations; it is simply not counted here. Browse <a href="#b-h">popular terms</a> below, or ask about a broader subject on the <a href="../ask/">Ask page</a>.</p>');
   }
   function notTooRare(t) {
     notice('<p><b>“' + esc(t.name) + '” is on our list, but it is mentioned too rarely to chart month by month.</b></p>' +
@@ -386,7 +387,7 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
     [/relationship|family|dating|parent|child|infant|friend|emotion|companion|wedding|chat/, 'Family and relationships'],
     [/travel|trip|weather|holiday|gift|event|time calc/, 'Travel, holidays and weather'],
     [/shopping|product|brand|price|\bcars?\b|vehicle|automotive|fashion|beauty|outfit|hair|jewelry|coin|collect/, 'Brands, shopping and cars'],
-    [/sport|bett|gambl|game|gaming|music|movie|film|\btv\b|show|entertain|anime|book|story|fiction|character|lore|creative|art|design|celebr|puzzle/, 'Entertainment and sports'],
+    [/sport|bett|gambl|game|gaming|music|movie|film|\btv\b|show|entertain|anime|book|story|fiction|character|lore|creative|art|design|celebr|puzzle|pop culture/, 'Entertainment and sports'],
     [/relig|spiritual|bible|astrolog|horoscop|history|scien|space|physics|chemis|biolog/, 'Religion, science and history']];
   function broadCat(cat) {
     const b = BROAD.find(x => x[1].includes(cat));
@@ -406,6 +407,12 @@ table.tt { width: 100%; border-collapse: collapse; font-size: 14px; }
       const list = M.terms.filter(t => broadCat(t.cat) === cs.value && charted(t)).sort((a, b) => b.per1000 - a.per1000);
       document.getElementById('browse').innerHTML = list.map(t => '<button type="button" data-id="' + t.id + '" title="' + esc(A.fmtK(t.per1000)) + ' per 1,000 conversations">' + esc(t.name) + '</button>').join('');
       document.getElementById('browse').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { add(b.dataset.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+      // the terms in this category that are on the list but too rare to chart, so the list is not read as all there is
+      const rare = M.terms.filter(t => broadCat(t.cat) === cs.value && !charted(t)).length;
+      document.getElementById('browse-more').textContent = rare
+        ? 'Showing the ' + list.length.toLocaleString('en-US') + ' terms in this category that can be charted. Another ' + rare.toLocaleString('en-US') +
+          ' are on our list but come up too rarely to chart by month: type a name in the box above, or ask about it on the Ask page.'
+        : '';
     };
     cs.addEventListener('change', show); show();
   }

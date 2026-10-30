@@ -51,6 +51,13 @@
     let own;
     try { own = R.read(forReader(q)); } catch (e) { return { question: q, notes: [], by: 'theirs' }; }
     if (A.mentionRoute(T).length) return { question: q, notes: own.notes.filter((n) => /by state/.test(n)), by: 'theirs' };   // a state reads as mentions of its name; say why
+    // An explicit mention question whose term is not on the list ("how often do people mention Mobile?")
+    // is answered as such by the site, never rewritten into a subject the reader finds in the name.
+    if (T.mentionIntent) return { question: q, notes: [], by: 'theirs' };
+    // A question about the study itself ("where does the data come from?") gets the site's pointer to About.
+    if (slotsOf(T) === 0 && A.META_Q && A.META_Q.test(T.raw)) return { question: q, notes: [], by: 'theirs' };
+    // A single word the reader can only typo-correct ("hello" read as "cello") is left to the site.
+    if (slotsOf(T) === 0 && (q.match(/[a-z0-9']+/gi) || []).length <= 1 && own.notes.some((n) => /^Read "/.test(n))) return { question: q, notes: [], by: 'theirs' };
     const allRead = unread(T).length === 0;
     if (own.minors || !own.question) return { question: q, notes: own.minors || allRead ? [] : keep(own.notes, T), by: 'theirs' };
     // what each reading got out of the question: a slot each, plus one when the question asks who or when and the reading says so

@@ -24,15 +24,19 @@
  */
 (function () {
   'use strict';
-  // the site's subjects → the categories of its tracked terms (data/mentions_index.json)
+  // the site's subjects → the categories of its tracked terms (data/mentions_index.json); an entry
+  // starting with "=" is one term by name, for subjects whose categories are mixed ("Money and work"
+  // holds both, and "Science and history" both): a whole category there put Marketing under money
+  // and Space under history.
+  const T = (s) => s.split('|').map((n) => '=' + n);
   const CATS = {
     sports: ['Sports'],
     health_medicine: ['Health and medicine', 'Medications'],
     entertainment_games: ['Entertainment', 'People: entertainment and sports', 'People: media and influencers'],
     politics_government_law: ['News and policy', 'People: US politics', 'People: world leaders'],
     pol: ['News and policy', 'People: US politics', 'People: world leaders'],
-    money_shopping_finance: ['Money and work', 'Companies and brands'],
-    work_career_business: ['Money and work', 'Companies and brands', 'People: business and tech'],
+    money_shopping_finance: ['Companies and brands'].concat(T('Credit cards|Credit scores|Debt|Loans|Saving money|Investing|Retirement|Budget|Insurance|Pay|Real estate|Buying a house|Taxes|Bitcoin|Crypto|Cash App|Venmo|Zelle|PayPal|Inflation|Grocery prices|Gas prices|Cost of living')),
+    work_career_business: ['People: business and tech'].concat(T('Job search|Resumes|Cover letters|Job interview|Bosses|Coworkers|Quitting a job|Getting fired|Remote work|Small business|Marketing|Gig work|Pay|LinkedIn|Indeed|Glassdoor|Upwork|Excel|Email|Presentations|PowerPoint|Microsoft Teams|Slack|Zoom|Layoffs|Unemployment|Minimum wage|Unions')),
     technology_devices: ['Technology and AI', 'Apps and platforms', 'People: business and tech'],
     social_media_online: ['Apps and platforms', 'People: media and influencers'],
     food_drink: ['Food and drink'],
@@ -42,8 +46,8 @@
     education_schools: ['School and learning'],
     relationships_family: ['Relationships and family'],
     religion_spirituality_philosophy: ['Religion and beliefs'],
-    history_society_culture: ['People: historical', 'Science and history'],
-    science_nature: ['Science and history', 'Weather and disasters']
+    history_society_culture: ['People: historical'].concat(T('World War II|World War I|The Civil War|Ancient history|US Founding|Medieval history|History class')),
+    science_nature: ['Weather and disasters'].concat(T('Space|NASA|Mars|Dinosaurs|Evolution|Quantum physics|Climate|Climate change|Weather'))
   };
   const TOP = 30;    // terms looked up per question (the most mentioned overall), of which the chart shows up to eight
   const SHOW = 8;
@@ -97,7 +101,7 @@
   function termRows(pl) {
     const A = window.PromptAsk, ix = A.mentions();
     if (!ix || !pl.cats.length) return Promise.resolve([]);
-    const terms = ix.terms.filter((t) => pl.cats.indexOf(t.cat) >= 0 && t.per1000 != null).sort((a, b) => b.per1000 - a.per1000).slice(0, TOP);
+    const terms = ix.terms.filter((t) => (pl.cats.indexOf(t.cat) >= 0 || pl.cats.indexOf('=' + t.name) >= 0) && t.per1000 != null).sort((a, b) => b.per1000 - a.per1000).slice(0, TOP);
     if (!pl.who) return Promise.resolve(terms.slice(0, SHOW).map((t) => ({ id: t.id, name: t.name, cat: t.cat, v: t.per1000, ref: null })));
     return Promise.all(terms.map((t) => A.loadTerm(t.id).then((d) => {
       const c = d && d.groups && d.groups[pl.who.dim] ? d.groups[pl.who.dim].filter((g) => g.level === pl.who.level)[0] : null;
@@ -179,6 +183,9 @@
       if (pl.purpose && rs.length < 3) return false;
       const title = root.querySelector('.atitle');
       if (!title) return false;
+      // the site withheld the group's own figure (too few people, or a handful supplying most of it):
+      // a breakdown of the same conversations would publish what the rule withholds
+      if (/not published|too few|cannot be answered|does not report/i.test(title.textContent || '')) return false;
       const whoText = pl.who ? (readAs && readAs[0] ? readAs[0].replace(/^people$/i, 'people') : 'this group') : '';
       title.insertAdjacentHTML('afterend', html(pl, rs, whoText));
       return true;
