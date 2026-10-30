@@ -18,7 +18,8 @@
     opt = opt || {};
     document.getElementById(id).innerHTML = parts.map(([l, v, c, t]) => '<div style="width:' + v + '%;background:' + c + ';color:' + t + '">' +
       (v > 10 ? (opt.labels ? l + ' ' : '') + Math.round(v) + '%' : '') + '</div>').join('');
-    document.getElementById(keyId).innerHTML = parts.map(([l, v, c]) => '<span><i class="sw" style="background:' + c + '"></i>' + l + ' ' + v.toFixed(1) + '%</span>').join('');
+    const dp = opt.dp == null ? 1 : opt.dp;     // 0 for figures stored as whole numbers, so none shows a made-up ".0"
+    document.getElementById(keyId).innerHTML = parts.map(([l, v, c]) => '<span><i class="sw" style="background:' + c + '"></i>' + l + ' ' + v.toFixed(dp) + '%</span>').join('');
   };
 
   /* an SVG element factory bound to one svg */

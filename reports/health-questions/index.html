@@ -307,7 +307,9 @@
   /* grouped bars, two series per row */
   function pairs(id, labels, a, b, names) {
     const max = Math.max(...a, ...b) * 1.08;
-    document.getElementById(id).innerHTML = labels.map((l, i) => '<div class="prow"><span class="lab">' + esc(l) + '</span><span class="tr"><span class="a" style="width:' + (a[i] / max * 100).toFixed(1) + '%"></span><span class="b" style="width:' + (b[i] / max * 100).toFixed(1) + '%"></span></span><span class="v"><i style="background:var(--data-red)"></i>' + a[i].toFixed(1) + '%<br><i style="background:var(--data-blue)"></i>' + b[i].toFixed(1) + '%</span></div>').join('');
+    // each figure at the precision it was published with (the deck gives most as whole numbers), never a made-up ".0"
+    const f = (v) => Number.isInteger(v) ? String(v) : v.toFixed(1);
+    document.getElementById(id).innerHTML = labels.map((l, i) => '<div class="prow"><span class="lab">' + esc(l) + '</span><span class="tr"><span class="a" style="width:' + (a[i] / max * 100).toFixed(1) + '%"></span><span class="b" style="width:' + (b[i] / max * 100).toFixed(1) + '%"></span></span><span class="v"><i style="background:var(--data-red)"></i>' + f(a[i]) + '%<br><i style="background:var(--data-blue)"></i>' + f(b[i]) + '%</span></div>').join('');
   }
 
   /* columns with every value labelled; hovering a column writes its value in the readout; series: [{name, values, color}] */
@@ -391,7 +393,7 @@
 
     // who it is about
     const AB = { 'Themselves': ['#b00b33', '#fff'], 'Nobody in particular': ['#0e77a4', '#fff'], 'Someone else': ['#858585', '#fff'], 'Their child or dependent': ['#c99a2e', '#13233a'] };
-    R.stack('f-about', 'f-about-key', d.about.map(([l, v]) => [l, v, AB[l][0], AB[l][1]]));
+    R.stack('f-about', 'f-about-key', d.about.map(([l, v]) => [l, v, AB[l][0], AB[l][1]]), { dp: 0 });   // whole numbers in the source
 
     // about a child: three views
     const box = document.getElementById('f-child'), cap = document.getElementById('f-child-cap'), read = document.getElementById('r-child');
