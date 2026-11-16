@@ -78,21 +78,38 @@ a { color: inherit; }
 
 .top { background: var(--night); color: var(--on-night); border-bottom: 1px solid var(--night-line); }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 21px; font-weight: 500; text-decoration: none; color: inherit; }
-.brand img { display: block; }
-.nav { display: flex; gap: 6px 22px; font-size: 14px; color: var(--on-night-2); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--serif); font-size: 25px; font-weight: 600; text-decoration: none; color: inherit; }
+.brand img { display: block; width: 36px; height: 36px; }
+.nav { display: flex; gap: 6px 22px; font-size: 15px; font-weight: 600; color: #d9d9d9; flex-wrap: wrap; }
 @media (max-width: 480px) { .nav { column-gap: 16px; } }
 .nav a { text-decoration: none; }
 .nav a:hover, .nav a[aria-current] { color: #fff; }
 
 .hero { background: var(--night); color: var(--on-night); padding-block: 40px 18px; }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px; align-items: center; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr); gap: 32px 40px; align-items: center; }
 .hero .eyebrow { color: var(--on-night-2); margin-bottom: 14px; }
 .hero h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.04; color: #fff; margin-bottom: 18px; }
 .lede { font-size: 17px; color: #c9d1dd; max-width: 34em; margin-bottom: 18px; }
 .now { font-size: 16px; color: var(--glow); min-height: 52px; margin-bottom: 22px; max-width: 32em; }
 .cta { display: flex; gap: 12px; flex-wrap: wrap; }
-.dial-box svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; }
+/* The dial sits at the right with its legend underneath. Legend entries never wrap
+   inside themselves: as the box narrows the legend steps from 4 columns to 3, 2, then 1
+   (thresholds from the measured label widths at 12px). */
+.dial-box { max-width: 650px; margin-left: auto; width: 100%; container-type: inline-size; }
+.dial-box svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; overflow: visible; }
+.dial-box .legend { display: grid; grid-template-columns: repeat(4, max-content); justify-content: center; gap: 6px 18px; font-size: 12px; line-height: 1.35; margin-top: 10px; padding-top: 12px; }
+.dial-box .legend span { gap: 6px; white-space: nowrap; }
+.dial-box .legend .sw { width: 9px; height: 9px; flex: none; }
+.dial-box .dial-note { text-align: center; margin-top: 10px; }
+@container (max-width: 645px) { .dial-box .legend { grid-template-columns: repeat(3, max-content); } }
+@container (max-width: 520px) { .dial-box .legend { grid-template-columns: repeat(2, max-content); } }
+@container (max-width: 360px) { .dial-box .legend { font-size: 11px; gap: 5px 12px; } }
+@container (max-width: 315px) { .dial-box .legend { grid-template-columns: max-content; } }
+@media (max-width: 560px) { .dial-box .dial-note { text-align: left; } }
+@media (min-width: 901px) {
+  .hero-grid > div:first-child { margin-bottom: 40px; }   /* text sits a little above center */
+  .dial-box svg { transform: translateX(14px); }          /* dial nudged right of the legend's center */
+}
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--on-night-2); padding-top: 14px; border-top: 1px solid var(--night-line); margin-top: 10px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
@@ -226,7 +243,7 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <p class="eyebrow">Rutgers University · School of Communication and Information</p>
+      <p class="eyebrow">Rutgers University<br>School of Communication and Information</p>
       <h1>A year of what people ask AI</h1>
       <p class="lede">An opt-in panel of 73,852 people in the United States shared their ChatGPT conversations with researchers for twelve months. We study what they asked, who asked it, and when.</p>
       <p class="now" id="now" aria-live="polite"></p>
@@ -237,11 +254,9 @@ footer { background: var(--night); color: var(--on-night-2); padding-block: 36px
     </div>
     <div class="dial-box">
       <svg id="dial" viewBox="8 8 384 384" role="img" aria-label="24-hour dial: the share of the day's conversations at each hour, colored by subject group. Select an hour to see it."></svg>
+      <div class="legend" id="legend"></div>
+      <p class="dial-note">Each wedge is one hour of the day (local time); its length is that hour’s share of the day’s conversations.</p>
     </div>
-  </div>
-  <div class="wrap">
-    <div class="legend" id="legend"></div>
-    <p class="dial-note">Each wedge is one hour of the day, in the panelist’s local time; its length is that hour’s share of the day’s conversations.</p>
   </div>
 </section>
 
